@@ -1,12 +1,12 @@
---// Aether UI Library (1.2x Scaled, Fixed Button Animations)
+--// Bloxium UI Library (1.2x Scaled, Sharpened Corners)
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 
 local LocalPlayer = Players.LocalPlayer
 
-local Aether = {}
-Aether.__index = Aether
+local Bloxium = {}
+Bloxium.__index = Bloxium
 
 local COLORS = {
     Background  = Color3.fromRGB(15, 17, 20),
@@ -14,7 +14,6 @@ local COLORS = {
     SidebarItem = Color3.fromRGB(22, 25, 29),
     Panel       = Color3.fromRGB(19, 22, 26),
     Control     = Color3.fromRGB(25, 28, 33),
-    -- Made the hover and press colors much brighter so the click flash is highly visible
     ControlHover= Color3.fromRGB(42, 47, 56), 
     ControlPress= Color3.fromRGB(65, 72, 85),
     Border      = Color3.fromRGB(38, 42, 48),
@@ -30,7 +29,7 @@ end
 
 local function corner(parent, radius)
     local object = Instance.new("UICorner")
-    object.CornerRadius = UDim.new(0, radius or 6)
+    object.CornerRadius = UDim.new(0, radius or 3) -- Default tightened to 3
     object.Parent = parent
     return object
 end
@@ -66,7 +65,6 @@ local function label(parent, text, size, font, color)
     return object
 end
 
--- Fixed the BackgroundTransparency issue so animations actually show up
 local function makeButton(parent, transparent)
     local object = Instance.new("TextButton")
     object.AutoButtonColor = false
@@ -82,7 +80,6 @@ local function attachButtonEffects(btn, baseColor, hoverColor, pressColor)
     hoverColor = hoverColor or COLORS.ControlHover
     pressColor = pressColor or COLORS.ControlPress
 
-    -- Force initial color
     btn.BackgroundColor3 = baseColor
 
     btn.MouseEnter:Connect(function()
@@ -99,12 +96,11 @@ local function attachButtonEffects(btn, baseColor, hoverColor, pressColor)
     end)
 end
 
-function Aether.new(options)
+function Bloxium.new(options)
     options = options or {}
-    local self = setmetatable({}, Aether)
+    local self = setmetatable({}, Bloxium)
 
-    -- Scaled 1.2x from 540x360
-    self.Name = options.Name or "AETHER"
+    self.Name = options.Name or "BLOXIUM"
     self.Version = options.Version or "v1.0"
     self.Width = options.Width or 650 
     self.Height = options.Height or 430
@@ -132,11 +128,10 @@ function Aether.new(options)
     main.BorderSizePixel = 0
     main.ClipsDescendants = true
     main.Parent = gui
-    corner(main, 8)
+    corner(main, 5) -- Sharpened main window from 8 down to 5
     stroke(main, COLORS.Border, 1)
     self.Main = main
 
-    -- Scaled 1.2x
     local HEADER_HEIGHT = 44 
     local header = Instance.new("Frame")
     header.Name = "Header"
@@ -254,13 +249,13 @@ function Aether.new(options)
     return self
 end
 
-function Aether:CreateTab(options)
+function Bloxium:CreateTab(options)
     options = type(options) == "string" and { Name = options } or (options or {})
     local tab = { Library = self, Name = options.Name or "Tab", Sections = {} }
 
     local navButton = makeButton(self.NavList, false)
     navButton.Size = UDim2.new(1, 0, 0, 34)
-    corner(navButton, 5)
+    corner(navButton, 4) -- Sharpened tab buttons
 
     local navText = label(navButton, tab.Name, 14, Enum.Font.GothamMedium, COLORS.Muted)
     navText.Position = UDim2.fromOffset(12, 0)
@@ -294,7 +289,6 @@ function Aether:CreateTab(options)
             local active = (other == tab)
             other.Page.Visible = active
             
-            -- Stop standard hover effects from overriding active tab color
             if active then
                 tween(other.NavButton, 0.15, { BackgroundColor3 = COLORS.Control })
                 other.NavButton.TextLabel.TextColor3 = COLORS.Text
@@ -320,7 +314,9 @@ function Aether:CreateTab(options)
         container.Size = UDim2.new(1, 0, 0, 0)
         container.AutomaticSize = Enum.AutomaticSize.Y
         container.Parent = page
-        corner(container, 6)
+        
+        -- Sharpened section backgrounds down to 3 (was 6) to remove the bubbly look
+        corner(container, 3) 
         stroke(container, COLORS.Border, 1)
         padding(container, 12, 12, 10, 10)
 
@@ -359,7 +355,7 @@ function Aether:CreateTab(options)
             toggle.BackgroundColor3 = COLORS.Control
             toggle.BorderSizePixel = 0
             toggle.Parent = row
-            corner(toggle, 11)
+            corner(toggle, 11) -- Kept perfectly round for pill shape
 
             local knob = Instance.new("Frame")
             knob.Size = UDim2.fromOffset(18, 18)
@@ -367,9 +363,9 @@ function Aether:CreateTab(options)
             knob.BackgroundColor3 = COLORS.Text
             knob.BorderSizePixel = 0
             knob.Parent = toggle
-            corner(knob, 9)
+            corner(knob, 9) -- Kept perfectly round
 
-            local hit = makeButton(row, true) -- Invisible hitbox
+            local hit = makeButton(row, true) 
             hit.Size = UDim2.fromScale(1, 1)
 
             local state = opts.CurrentValue == true
@@ -390,7 +386,7 @@ function Aether:CreateTab(options)
             local row = rowBase(36)
             local button = makeButton(row, false)
             button.Size = UDim2.fromScale(1, 1)
-            corner(button, 6)
+            corner(button, 3) -- Sharpened generic buttons
             stroke(button, COLORS.Border, 1)
 
             local btnText = label(button, opts.Name or "Button", 14, Enum.Font.GothamMedium, COLORS.Text)
@@ -425,7 +421,7 @@ function Aether:CreateTab(options)
             track.Size = UDim2.new(1, 0, 0, 6)
             track.BackgroundColor3 = COLORS.Control
             track.Parent = row
-            corner(track, 3)
+            corner(track, 3) 
 
             local fill = Instance.new("Frame")
             fill.Size = UDim2.fromScale(0, 1)
@@ -438,9 +434,9 @@ function Aether:CreateTab(options)
             knob.Size = UDim2.fromOffset(14, 14)
             knob.BackgroundColor3 = COLORS.Text
             knob.Parent = track
-            corner(knob, 7)
+            corner(knob, 7) -- Kept round
 
-            local hit = makeButton(row, true) -- Invisible hitbox
+            local hit = makeButton(row, true) 
             hit.Position = UDim2.new(0, 0, 0, 20)
             hit.Size = UDim2.new(1, 0, 0, 26)
 
@@ -515,7 +511,7 @@ function Aether:CreateTab(options)
             local ddButton = makeButton(headerRow, false)
             ddButton.Position = UDim2.new(0.45, 0, 0, 0)
             ddButton.Size = UDim2.new(0.55, 0, 1, 0)
-            corner(ddButton, 5)
+            corner(ddButton, 3) -- Sharpened dropdown box
             stroke(ddButton, COLORS.Border, 1)
 
             attachButtonEffects(ddButton, COLORS.Control, COLORS.ControlHover, COLORS.ControlPress)
@@ -529,7 +525,7 @@ function Aether:CreateTab(options)
             optFrame.Size = UDim2.new(1, 0, 0, #optionsList * 32)
             optFrame.BackgroundColor3 = COLORS.Control
             optFrame.Parent = container
-            corner(optFrame, 5)
+            corner(optFrame, 3) -- Sharpened dropdown list popup
             stroke(optFrame, COLORS.Border, 1)
 
             local optLayout = Instance.new("UIListLayout")
@@ -569,13 +565,13 @@ function Aether:CreateTab(options)
     return tab
 end
 
-function Aether:Destroy()
+function Bloxium:Destroy()
     if self.Destroyed then return end
     self.Destroyed = true
     for _, conn in ipairs(self.Connections) do pcall(function() conn:Disconnect() end) end
     if self.Gui then self.Gui:Destroy() end
 end
 
-function Aether:CreateWindow(options) return Aether.new(options) end
+function Bloxium:CreateWindow(options) return Bloxium.new(options) end
 
-return Aether
+return Bloxium
