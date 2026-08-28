@@ -1,7 +1,5 @@
-local Aether = loadstring([[
--- Aether.lua
--- Compact Rayfield-style UI library for Roblox.
--- Designed for normal Roblox ScreenGui / LocalScript environments.
+--// Aether.lua
+--// Compact Rayfield-style Roblox UI library
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -13,112 +11,147 @@ local LocalPlayer = Players.LocalPlayer
 local Aether = {}
 Aether.__index = Aether
 
+--==============================================================
+-- COLORS
+--==============================================================
+
 local COLORS = {
     Background  = Color3.fromRGB(13, 15, 17),
     SidebarDark = Color3.fromRGB(10, 12, 14),
     SidebarItem = Color3.fromRGB(24, 26, 29),
+
     Panel       = Color3.fromRGB(17, 19, 21),
     Control     = Color3.fromRGB(20, 22, 25),
+
     Border      = Color3.fromRGB(42, 45, 49),
     Divider     = Color3.fromRGB(34, 37, 40),
+
     Text        = Color3.fromRGB(235, 236, 238),
     Muted       = Color3.fromRGB(151, 155, 162),
     Dim         = Color3.fromRGB(105, 109, 116),
+
     Accent      = Color3.fromRGB(53, 115, 255),
     AccentSoft  = Color3.fromRGB(84, 139, 255),
+
     Success     = Color3.fromRGB(89, 207, 115),
 }
 
-local function tween(obj, duration, props)
-    local tw = TweenService:Create(
-        obj,
+--==============================================================
+-- HELPERS
+--==============================================================
+
+local function tween(object, duration, properties)
+    local animation = TweenService:Create(
+        object,
         TweenInfo.new(
             duration,
             Enum.EasingStyle.Quart,
             Enum.EasingDirection.Out
         ),
-        props
+        properties
     )
 
-    tw:Play()
-    return tw
+    animation:Play()
+
+    return animation
 end
 
 local function corner(parent, radius)
-    local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, radius or 5)
-    c.Parent = parent
-    return c
+    local object = Instance.new("UICorner")
+
+    object.CornerRadius =
+        UDim.new(0, radius or 5)
+
+    object.Parent = parent
+
+    return object
 end
 
 local function stroke(parent, color, thickness, transparency)
-    local s = Instance.new("UIStroke")
-    s.Color = color or COLORS.Border
-    s.Thickness = thickness or 1
-    s.Transparency = transparency or 0
-    s.Parent = parent
-    return s
+    local object = Instance.new("UIStroke")
+
+    object.Color =
+        color or COLORS.Border
+
+    object.Thickness =
+        thickness or 1
+
+    object.Transparency =
+        transparency or 0
+
+    object.Parent = parent
+
+    return object
 end
 
-local function padding(parent, l, r, t, b)
-    local p = Instance.new("UIPadding")
-    p.PaddingLeft = UDim.new(0, l or 0)
-    p.PaddingRight = UDim.new(0, r or 0)
-    p.PaddingTop = UDim.new(0, t or 0)
-    p.PaddingBottom = UDim.new(0, b or 0)
-    p.Parent = parent
-    return p
+local function padding(parent, left, right, top, bottom)
+    local object = Instance.new("UIPadding")
+
+    object.PaddingLeft =
+        UDim.new(0, left or 0)
+
+    object.PaddingRight =
+        UDim.new(0, right or 0)
+
+    object.PaddingTop =
+        UDim.new(0, top or 0)
+
+    object.PaddingBottom =
+        UDim.new(0, bottom or 0)
+
+    object.Parent = parent
+
+    return object
 end
 
 local function label(parent, text, size, font, color)
-    local l = Instance.new("TextLabel")
-    l.BackgroundTransparency = 1
-    l.Text = text or ""
-    l.Font = font or Enum.Font.Gotham
-    l.TextSize = size or 14
-    l.TextColor3 = color or COLORS.Text
-    l.TextXAlignment = Enum.TextXAlignment.Left
-    l.TextYAlignment = Enum.TextYAlignment.Center
-    l.Parent = parent
-    return l
+    local object = Instance.new("TextLabel")
+
+    object.BackgroundTransparency = 1
+    object.Text = text or ""
+    object.Font = font or Enum.Font.Gotham
+    object.TextSize = size or 14
+
+    object.TextColor3 =
+        color or COLORS.Text
+
+    object.TextXAlignment =
+        Enum.TextXAlignment.Left
+
+    object.TextYAlignment =
+        Enum.TextYAlignment.Center
+
+    object.Parent = parent
+
+    return object
 end
 
 local function makeButton(parent)
-    local b = Instance.new("TextButton")
-    b.AutoButtonColor = false
-    b.BackgroundTransparency = 1
-    b.BorderSizePixel = 0
-    b.Text = ""
-    b.Parent = parent
-    return b
-end
+    local object = Instance.new("TextButton")
 
-local function icon(parent, glyph)
-    local l = label(
-        parent,
-        glyph,
-        18,
-        Enum.Font.GothamMedium,
-        COLORS.Muted
-    )
+    object.AutoButtonColor = false
+    object.BackgroundTransparency = 1
+    object.BorderSizePixel = 0
+    object.Text = ""
 
-    l.TextXAlignment = Enum.TextXAlignment.Center
+    object.Parent = parent
 
-    return l
+    return object
 end
 
 local function getTextWidth(text, font, size)
-    local result = TextService:GetTextSize(
-        text,
-        size,
-        font,
-        Vector2.new(1000, 100)
-    )
+    local result =
+        TextService:GetTextSize(
+            text,
+            size,
+            font,
+            Vector2.new(1000, 100)
+        )
 
     return result.X
 end
 
-local function getViewportSize()
+local function viewportSize()
     local camera = workspace.CurrentCamera
 
     if camera then
@@ -129,207 +162,365 @@ local function getViewportSize()
 end
 
 local function clampWindowSize(width, height)
-    local viewport = getViewportSize()
+    local viewport = viewportSize()
 
-    local maxWidth = math.max(520, viewport.X - 40)
-    local maxHeight = math.max(360, viewport.Y - 40)
+    local maxWidth =
+        math.max(520, viewport.X - 30)
 
-    width = math.min(width, maxWidth)
-    height = math.min(height, maxHeight)
+    local maxHeight =
+        math.max(360, viewport.Y - 30)
 
-    width = math.max(width, 520)
-    height = math.max(height, 360)
+    width =
+        math.clamp(
+            width,
+            520,
+            maxWidth
+        )
 
-    return math.floor(width), math.floor(height)
+    height =
+        math.clamp(
+            height,
+            360,
+            maxHeight
+        )
+
+    return
+        math.floor(width),
+        math.floor(height)
 end
+
+--==============================================================
+-- WINDOW
+--==============================================================
 
 function Aether.new(options)
     options = options or {}
 
-    local self = setmetatable({}, Aether)
+    local self =
+        setmetatable({}, Aether)
 
-    self.Name = options.Name or "AETHER"
-    self.Version = options.Version or "v1.0"
-    self.Width = options.Width or 780
-    self.Height = options.Height or 500
+    self.Name =
+        options.Name or "AETHER"
 
-    self.Width, self.Height = clampWindowSize(
-        self.Width,
-        self.Height
-    )
+    self.Version =
+        options.Version or "v1.0"
+
+    self.Width =
+        options.Width or 780
+
+    self.Height =
+        options.Height or 500
+
+    self.Width,
+    self.Height =
+        clampWindowSize(
+            self.Width,
+            self.Height
+        )
 
     self.Minimized = false
+    self.Destroyed = false
+
     self.Tabs = {}
     self.ActiveTab = nil
-    self.Destroyed = false
     self.Connections = {}
 
-    local gui = Instance.new("ScreenGui")
-    gui.Name = self.Name:gsub("%W", "") .. "_UI"
+    --==========================================================
+    -- SCREEN GUI
+    --==========================================================
+
+    local gui =
+        Instance.new("ScreenGui")
+
+    gui.Name =
+        self.Name:gsub("%W", "")
+        .. "_UI"
+
     gui.ResetOnSpawn = false
     gui.IgnoreGuiInset = true
-    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+    gui.ZIndexBehavior =
+        Enum.ZIndexBehavior.Sibling
+
+    gui.Parent =
+        LocalPlayer:WaitForChild("PlayerGui")
 
     self.Gui = gui
 
-    --==============================================================
+    --==========================================================
     -- SHADOW
-    --==============================================================
+    --==========================================================
 
-    local shadow = Instance.new("Frame")
+    local shadow =
+        Instance.new("Frame")
+
     shadow.Name = "Shadow"
-    shadow.AnchorPoint = Vector2.new(0.5, 0.5)
-    shadow.Position = UDim2.fromScale(0.5, 0.5)
-    shadow.Size = UDim2.fromOffset(
-        self.Width + 10,
-        self.Height + 10
-    )
-    shadow.BackgroundColor3 = Color3.new(0, 0, 0)
-    shadow.BackgroundTransparency = 0.55
+
+    shadow.AnchorPoint =
+        Vector2.new(0.5, 0.5)
+
+    shadow.Position =
+        UDim2.fromScale(0.5, 0.5)
+
+    shadow.Size =
+        UDim2.fromOffset(
+            self.Width + 12,
+            self.Height + 12
+        )
+
+    shadow.BackgroundColor3 =
+        Color3.new(0, 0, 0)
+
+    shadow.BackgroundTransparency =
+        0.55
+
     shadow.BorderSizePixel = 0
+
     shadow.Parent = gui
 
-    corner(shadow, 7)
+    corner(shadow, 8)
 
     self.Shadow = shadow
 
-    --==============================================================
+    --==========================================================
     -- MAIN
-    --==============================================================
+    --==========================================================
 
-    local main = Instance.new("Frame")
+    local main =
+        Instance.new("Frame")
+
     main.Name = "Main"
-    main.AnchorPoint = Vector2.new(0.5, 0.5)
-    main.Position = UDim2.fromScale(0.5, 0.5)
-    main.Size = UDim2.fromOffset(
-        self.Width,
-        self.Height
-    )
-    main.BackgroundColor3 = COLORS.Background
+
+    main.AnchorPoint =
+        Vector2.new(0.5, 0.5)
+
+    main.Position =
+        UDim2.fromScale(0.5, 0.5)
+
+    main.Size =
+        UDim2.fromOffset(
+            self.Width,
+            self.Height
+        )
+
+    main.BackgroundColor3 =
+        COLORS.Background
+
     main.BorderSizePixel = 0
+
     main.ClipsDescendants = true
+
     main.Parent = gui
 
-    corner(main, 6)
-    stroke(main, COLORS.Border, 1)
+    -- Only corner radius.
+    -- No UIStroke on the entire GUI.
+
+    corner(main, 7)
 
     self.Main = main
 
-    --==============================================================
+    --==========================================================
     -- HEADER
-    --==============================================================
+    --==========================================================
 
     local HEADER_HEIGHT = 50
 
-    local header = Instance.new("Frame")
+    local header =
+        Instance.new("Frame")
+
     header.Name = "Header"
-    header.Size = UDim2.new(1, 0, 0, HEADER_HEIGHT)
-    header.BackgroundColor3 = COLORS.Background
+
+    header.Size =
+        UDim2.new(
+            1,
+            0,
+            0,
+            HEADER_HEIGHT
+        )
+
+    header.BackgroundColor3 =
+        COLORS.Background
+
     header.BorderSizePixel = 0
+
     header.Parent = main
 
     self.Header = header
 
-    local headerDivider = Instance.new("Frame")
-    headerDivider.Position = UDim2.new(0, 0, 1, -1)
-    headerDivider.Size = UDim2.new(1, 0, 0, 1)
-    headerDivider.BackgroundColor3 = COLORS.Divider
+    local headerDivider =
+        Instance.new("Frame")
+
+    headerDivider.Position =
+        UDim2.new(0, 0, 1, -1)
+
+    headerDivider.Size =
+        UDim2.new(1, 0, 0, 1)
+
+    headerDivider.BackgroundColor3 =
+        COLORS.Divider
+
     headerDivider.BorderSizePixel = 0
+
     headerDivider.Parent = header
 
-    local title = label(
-        header,
-        self.Name,
-        19,
-        Enum.Font.GothamMedium,
-        COLORS.Text
-    )
+    --==========================================================
+    -- HEADER TITLE
+    --==========================================================
 
-    title.Position = UDim2.fromOffset(22, 0)
-    title.Size = UDim2.new(
-        0,
-        getTextWidth(
+    local title =
+        label(
+            header,
             self.Name,
+            19,
             Enum.Font.GothamMedium,
-            19
-        ) + 8,
-        1,
-        0
-    )
+            COLORS.Text
+        )
 
-    local version = label(
-        header,
-        self.Version,
-        12,
-        Enum.Font.Gotham,
-        COLORS.Muted
-    )
+    title.Position =
+        UDim2.fromOffset(22, 0)
 
-    version.Position = UDim2.fromOffset(
-        title.Position.X.Offset +
-        title.Size.X.Offset - 2,
-        0
-    )
+    title.Size =
+        UDim2.fromOffset(
+            getTextWidth(
+                self.Name,
+                Enum.Font.GothamMedium,
+                19
+            ) + 8,
+            HEADER_HEIGHT
+        )
 
-    version.Size = UDim2.fromOffset(50, HEADER_HEIGHT)
+    local version =
+        label(
+            header,
+            self.Version,
+            11,
+            Enum.Font.Gotham,
+            COLORS.Muted
+        )
 
-    -- Minimize
+    version.Position =
+        UDim2.fromOffset(
+            title.Position.X.Offset +
+            title.Size.X.Offset,
+            0
+        )
 
-    local minimize = makeButton(header)
-    minimize.Size = UDim2.fromOffset(38, HEADER_HEIGHT)
-    minimize.Position = UDim2.new(1, -82, 0, 0)
+    version.Size =
+        UDim2.fromOffset(
+            45,
+            HEADER_HEIGHT
+        )
 
-    local minGlyph = label(
-        minimize,
-        "—",
-        20,
-        Enum.Font.Gotham,
-        COLORS.Muted
-    )
+    --==========================================================
+    -- MINIMIZE
+    --==========================================================
 
-    minGlyph.Size = UDim2.fromScale(1, 1)
-    minGlyph.TextXAlignment = Enum.TextXAlignment.Center
+    local minimize =
+        makeButton(header)
 
-    -- Close
+    minimize.Size =
+        UDim2.fromOffset(
+            38,
+            HEADER_HEIGHT
+        )
 
-    local close = makeButton(header)
-    close.Size = UDim2.fromOffset(38, HEADER_HEIGHT)
-    close.Position = UDim2.new(1, -40, 0, 0)
+    minimize.Position =
+        UDim2.new(
+            1,
+            -78,
+            0,
+            0
+        )
 
-    local closeGlyph = label(
-        close,
-        "×",
-        27,
-        Enum.Font.Gotham,
-        COLORS.Muted
-    )
+    local minGlyph =
+        label(
+            minimize,
+            "—",
+            19,
+            Enum.Font.Gotham,
+            COLORS.Muted
+        )
 
-    closeGlyph.Size = UDim2.fromScale(1, 1)
-    closeGlyph.TextXAlignment = Enum.TextXAlignment.Center
+    minGlyph.Size =
+        UDim2.fromScale(1, 1)
+
+    minGlyph.TextXAlignment =
+        Enum.TextXAlignment.Center
+
+    --==========================================================
+    -- CLOSE
+    --==========================================================
+
+    local close =
+        makeButton(header)
+
+    close.Size =
+        UDim2.fromOffset(
+            38,
+            HEADER_HEIGHT
+        )
+
+    close.Position =
+        UDim2.new(
+            1,
+            -40,
+            0,
+            0
+        )
+
+    local closeGlyph =
+        label(
+            close,
+            "×",
+            26,
+            Enum.Font.Gotham,
+            COLORS.Muted
+        )
+
+    closeGlyph.Size =
+        UDim2.fromScale(1, 1)
+
+    closeGlyph.TextXAlignment =
+        Enum.TextXAlignment.Center
 
     close.MouseEnter:Connect(function()
-        tween(closeGlyph, 0.12, {
-            TextColor3 = COLORS.Text
-        })
+        tween(
+            closeGlyph,
+            0.12,
+            {
+                TextColor3 = COLORS.Text
+            }
+        )
     end)
 
     close.MouseLeave:Connect(function()
-        tween(closeGlyph, 0.12, {
-            TextColor3 = COLORS.Muted
-        })
+        tween(
+            closeGlyph,
+            0.12,
+            {
+                TextColor3 = COLORS.Muted
+            }
+        )
     end)
 
     minimize.MouseEnter:Connect(function()
-        tween(minGlyph, 0.12, {
-            TextColor3 = COLORS.Text
-        })
+        tween(
+            minGlyph,
+            0.12,
+            {
+                TextColor3 = COLORS.Text
+            }
+        )
     end)
 
     minimize.MouseLeave:Connect(function()
-        tween(minGlyph, 0.12, {
-            TextColor3 = COLORS.Muted
-        })
+        tween(
+            minGlyph,
+            0.12,
+            {
+                TextColor3 = COLORS.Muted
+            }
+        )
     end)
 
     close.MouseButton1Click:Connect(function()
@@ -337,17 +528,19 @@ function Aether.new(options)
     end)
 
     minimize.MouseButton1Click:Connect(function()
-        self.Minimized = not self.Minimized
+        self.Minimized =
+            not self.Minimized
 
         if self.Minimized then
             tween(
                 main,
                 0.18,
                 {
-                    Size = UDim2.fromOffset(
-                        self.Width,
-                        HEADER_HEIGHT
-                    )
+                    Size =
+                        UDim2.fromOffset(
+                            self.Width,
+                            HEADER_HEIGHT
+                        )
                 }
             )
 
@@ -355,10 +548,11 @@ function Aether.new(options)
                 shadow,
                 0.18,
                 {
-                    Size = UDim2.fromOffset(
-                        self.Width + 10,
-                        HEADER_HEIGHT + 10
-                    )
+                    Size =
+                        UDim2.fromOffset(
+                            self.Width + 12,
+                            HEADER_HEIGHT + 12
+                        )
                 }
             )
         else
@@ -366,10 +560,11 @@ function Aether.new(options)
                 main,
                 0.18,
                 {
-                    Size = UDim2.fromOffset(
-                        self.Width,
-                        self.Height
-                    )
+                    Size =
+                        UDim2.fromOffset(
+                            self.Width,
+                            self.Height
+                        )
                 }
             )
 
@@ -377,31 +572,40 @@ function Aether.new(options)
                 shadow,
                 0.18,
                 {
-                    Size = UDim2.fromOffset(
-                        self.Width + 10,
-                        self.Height + 10
-                    )
+                    Size =
+                        UDim2.fromOffset(
+                            self.Width + 12,
+                            self.Height + 12
+                        )
                 }
             )
         end
     end)
 
-    --==============================================================
+    --==========================================================
     -- DRAGGING
-    --==============================================================
+    --==========================================================
 
     local dragging = false
     local dragStart
-    local startPos
+    local startPosition
 
     header.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        if input.UserInputType ==
+            Enum.UserInputType.MouseButton1 then
+
             dragging = true
-            dragStart = input.Position
-            startPos = main.Position
+
+            dragStart =
+                input.Position
+
+            startPosition =
+                main.Position
 
             input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
+                if input.UserInputState ==
+                    Enum.UserInputState.End then
+
                     dragging = false
                 end
             end)
@@ -410,304 +614,574 @@ function Aether.new(options)
 
     table.insert(
         self.Connections,
-        UserInputService.InputChanged:Connect(function(input)
-            if dragging and
-                input.UserInputType == Enum.UserInputType.MouseMovement then
 
-                local delta = input.Position - dragStart
+        UserInputService.InputChanged:Connect(
+            function(input)
+                if not dragging then
+                    return
+                end
 
-                main.Position = UDim2.new(
-                    startPos.X.Scale,
-                    startPos.X.Offset + delta.X,
-                    startPos.Y.Scale,
-                    startPos.Y.Offset + delta.Y
-                )
+                if input.UserInputType ==
+                    Enum.UserInputType.MouseMovement then
 
-                shadow.Position = main.Position
+                    local delta =
+                        input.Position -
+                        dragStart
+
+                    main.Position =
+                        UDim2.new(
+                            startPosition.X.Scale,
+                            startPosition.X.Offset + delta.X,
+
+                            startPosition.Y.Scale,
+                            startPosition.Y.Offset + delta.Y
+                        )
+
+                    shadow.Position =
+                        main.Position
+                end
             end
-        end)
+        )
     )
 
-    --==============================================================
+    --==========================================================
     -- BODY
-    --==============================================================
+    --==========================================================
 
-    local BODY_HEIGHT = self.Height - HEADER_HEIGHT
+    local BODY_HEIGHT =
+        self.Height -
+        HEADER_HEIGHT
+
     local RAIL_WIDTH = 54
-    local NAV_WIDTH = 136
+    local NAV_WIDTH = 138
 
-    --==============================================================
+    --==========================================================
     -- RAIL
-    --==============================================================
+    --==========================================================
 
-    local rail = Instance.new("Frame")
+    local rail =
+        Instance.new("Frame")
+
     rail.Name = "Rail"
-    rail.Position = UDim2.fromOffset(0, HEADER_HEIGHT)
-    rail.Size = UDim2.fromOffset(
-        RAIL_WIDTH,
-        BODY_HEIGHT
-    )
-    rail.BackgroundColor3 = COLORS.SidebarDark
+
+    rail.Position =
+        UDim2.fromOffset(
+            0,
+            HEADER_HEIGHT
+        )
+
+    rail.Size =
+        UDim2.fromOffset(
+            RAIL_WIDTH,
+            BODY_HEIGHT
+        )
+
+    rail.BackgroundColor3 =
+        COLORS.SidebarDark
+
     rail.BorderSizePixel = 0
+
     rail.Parent = main
 
     self.Rail = rail
 
-    local railDivider = Instance.new("Frame")
-    railDivider.Position = UDim2.new(1, -1, 0, 0)
-    railDivider.Size = UDim2.new(0, 1, 1, 0)
-    railDivider.BackgroundColor3 = COLORS.Divider
+    local railDivider =
+        Instance.new("Frame")
+
+    railDivider.Position =
+        UDim2.new(1, -1, 0, 0)
+
+    railDivider.Size =
+        UDim2.new(0, 1, 1, 0)
+
+    railDivider.BackgroundColor3 =
+        COLORS.Divider
+
     railDivider.BorderSizePixel = 0
+
     railDivider.Parent = rail
 
-    local logo = label(
-        rail,
-        options.Logo or "A",
-        23,
-        Enum.Font.GothamBold,
-        COLORS.Text
-    )
+    local logo =
+        label(
+            rail,
+            options.Logo or "A",
+            22,
+            Enum.Font.GothamBold,
+            COLORS.Text
+        )
 
-    logo.Size = UDim2.new(1, 0, 0, 45)
-    logo.Position = UDim2.fromOffset(0, 6)
-    logo.TextXAlignment = Enum.TextXAlignment.Center
+    logo.Size =
+        UDim2.new(1, 0, 0, 44)
 
-    local railTabs = Instance.new("Frame")
+    logo.Position =
+        UDim2.fromOffset(0, 5)
+
+    logo.TextXAlignment =
+        Enum.TextXAlignment.Center
+
+    local railTabs =
+        Instance.new("ScrollingFrame")
+
     railTabs.Name = "RailTabs"
+
+    railTabs.Position =
+        UDim2.fromOffset(0, 56)
+
+    railTabs.Size =
+        UDim2.new(
+            1,
+            0,
+            1,
+            -64
+        )
+
     railTabs.BackgroundTransparency = 1
-    railTabs.Position = UDim2.fromOffset(0, 60)
-    railTabs.Size = UDim2.new(1, 0, 1, -70)
+    railTabs.BorderSizePixel = 0
+
+    railTabs.ScrollBarThickness = 0
+
+    railTabs.ScrollingDirection =
+        Enum.ScrollingDirection.Y
+
+    railTabs.CanvasSize =
+        UDim2.fromOffset(0, 0)
+
+    railTabs.AutomaticCanvasSize =
+        Enum.AutomaticSize.Y
+
     railTabs.Parent = rail
 
-    local railLayout = Instance.new("UIListLayout")
-    railLayout.Padding = UDim.new(0, 6)
-    railLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    railLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    railLayout.Parent = railTabs
+    local railLayout =
+        Instance.new("UIListLayout")
+
+    railLayout.Padding =
+        UDim.new(0, 6)
+
+    railLayout.HorizontalAlignment =
+        Enum.HorizontalAlignment.Center
+
+    railLayout.SortOrder =
+        Enum.SortOrder.LayoutOrder
+
+    railLayout.Parent =
+        railTabs
 
     self.RailTabs = railTabs
 
-    --==============================================================
+    --==========================================================
     -- NAVIGATION
-    --==============================================================
+    --==========================================================
 
-    local navigation = Instance.new("Frame")
-    navigation.Name = "Navigation"
-    navigation.Position = UDim2.fromOffset(
-        RAIL_WIDTH,
-        HEADER_HEIGHT
-    )
-    navigation.Size = UDim2.fromOffset(
-        NAV_WIDTH,
-        BODY_HEIGHT
-    )
-    navigation.BackgroundColor3 = Color3.fromRGB(14, 16, 18)
+    local navigation =
+        Instance.new("Frame")
+
+    navigation.Name =
+        "Navigation"
+
+    navigation.Position =
+        UDim2.fromOffset(
+            RAIL_WIDTH,
+            HEADER_HEIGHT
+        )
+
+    navigation.Size =
+        UDim2.fromOffset(
+            NAV_WIDTH,
+            BODY_HEIGHT
+        )
+
+    navigation.BackgroundColor3 =
+        Color3.fromRGB(
+            14,
+            16,
+            18
+        )
+
     navigation.BorderSizePixel = 0
     navigation.Parent = main
 
-    self.Navigation = navigation
+    self.Navigation =
+        navigation
 
-    local navDivider = Instance.new("Frame")
-    navDivider.Position = UDim2.new(1, -1, 0, 0)
-    navDivider.Size = UDim2.new(0, 1, 1, 0)
-    navDivider.BackgroundColor3 = COLORS.Divider
+    local navDivider =
+        Instance.new("Frame")
+
+    navDivider.Position =
+        UDim2.new(1, -1, 0, 0)
+
+    navDivider.Size =
+        UDim2.new(0, 1, 1, 0)
+
+    navDivider.BackgroundColor3 =
+        COLORS.Divider
+
     navDivider.BorderSizePixel = 0
     navDivider.Parent = navigation
 
-    local navList = Instance.new("Frame")
+    -- ScrollingFrame instead of regular Frame
+    -- so every tab remains accessible.
+
+    local navList =
+        Instance.new("ScrollingFrame")
+
+    navList.Name = "TabList"
+
+    navList.Position =
+        UDim2.fromOffset(
+            10,
+            14
+        )
+
+    navList.Size =
+        UDim2.new(
+            1,
+            -20,
+            1,
+            -28
+        )
+
     navList.BackgroundTransparency = 1
-    navList.Position = UDim2.fromOffset(10, 14)
-    navList.Size = UDim2.new(1, -20, 1, -28)
-    navList.Parent = navigation
+    navList.BorderSizePixel = 0
 
-    local navLayout = Instance.new("UIListLayout")
-    navLayout.Padding = UDim.new(0, 4)
-    navLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    navLayout.Parent = navList
+    navList.ScrollBarThickness = 0
 
-    self.NavList = navList
+    navList.ScrollingDirection =
+        Enum.ScrollingDirection.Y
 
-    --==============================================================
+    navList.CanvasSize =
+        UDim2.fromOffset(0, 0)
+
+    navList.AutomaticCanvasSize =
+        Enum.AutomaticSize.Y
+
+    navList.Parent =
+        navigation
+
+    local navLayout =
+        Instance.new("UIListLayout")
+
+    navLayout.Padding =
+        UDim.new(0, 4)
+
+    navLayout.SortOrder =
+        Enum.SortOrder.LayoutOrder
+
+    navLayout.Parent =
+        navList
+
+    self.NavList =
+        navList
+
+    --==========================================================
     -- CONTENT
-    --==============================================================
+    --==========================================================
 
-    local content = Instance.new("Frame")
+    local content =
+        Instance.new("Frame")
+
     content.Name = "Content"
-    content.Position = UDim2.fromOffset(
-        RAIL_WIDTH + NAV_WIDTH,
-        HEADER_HEIGHT
-    )
-    content.Size = UDim2.new(
-        1,
-        -(RAIL_WIDTH + NAV_WIDTH),
-        1,
-        -HEADER_HEIGHT
-    )
-    content.BackgroundColor3 = COLORS.Background
+
+    content.Position =
+        UDim2.fromOffset(
+            RAIL_WIDTH +
+            NAV_WIDTH,
+            HEADER_HEIGHT
+        )
+
+    content.Size =
+        UDim2.new(
+            1,
+            -(RAIL_WIDTH + NAV_WIDTH),
+            1,
+            -HEADER_HEIGHT
+        )
+
+    content.BackgroundColor3 =
+        COLORS.Background
+
     content.BorderSizePixel = 0
+
     content.Parent = main
 
-    self.Content = content
+    self.Content =
+        content
 
-    local pageTitle = label(
-        content,
-        "",
-        21,
-        Enum.Font.GothamMedium,
-        COLORS.Text
-    )
+    local pageTitle =
+        label(
+            content,
+            "",
+            21,
+            Enum.Font.GothamMedium,
+            COLORS.Text
+        )
 
-    pageTitle.Position = UDim2.fromOffset(22, 17)
-    pageTitle.Size = UDim2.new(1, -44, 0, 30)
+    pageTitle.Position =
+        UDim2.fromOffset(
+            20,
+            14
+        )
 
-    self.PageTitle = pageTitle
+    pageTitle.Size =
+        UDim2.new(
+            1,
+            -40,
+            0,
+            28
+        )
 
-    --==============================================================
-    -- TOGGLE KEY
-    --==============================================================
+    self.PageTitle =
+        pageTitle
+
+    --==========================================================
+    -- UI TOGGLE KEY
+    --==========================================================
 
     if options.ToggleKey then
-        self.ToggleKey = options.ToggleKey
+        self.ToggleKey =
+            options.ToggleKey
 
         table.insert(
             self.Connections,
+
             UserInputService.InputBegan:Connect(
                 function(input, processed)
-                    if not processed and
-                        input.KeyCode == self.ToggleKey then
+                    if processed then
+                        return
+                    end
 
-                        gui.Enabled = not gui.Enabled
+                    if input.KeyCode ==
+                        self.ToggleKey then
+
+                        gui.Enabled =
+                            not gui.Enabled
                     end
                 end
             )
         )
     end
 
-    self:AddCloseCorner()
-
     return self
 end
 
 --==============================================================
--- EMPTY LOWER CORNER HOOK
---==============================================================
-
-function Aether:AddCloseCorner()
-    -- Reserved for game-specific implementations.
-end
-
---==============================================================
--- CREATE TAB
+-- TAB
 --==============================================================
 
 function Aether:CreateTab(options)
     options =
         type(options) == "string"
-        and {Name = options}
-        or (options or {})
+        and {
+            Name = options
+        }
+        or (
+            options or {}
+        )
 
     local tab = {}
 
     tab.Library = self
-    tab.Name = options.Name or (
-        "Tab " .. tostring(#self.Tabs + 1)
-    )
-    tab.Icon = options.Icon or ""
+
+    tab.Name =
+        options.Name
+        or (
+            "Tab "
+            .. tostring(#self.Tabs + 1)
+        )
+
+    -- ASCII-safe icon by default.
+    tab.Icon =
+        options.Icon
+        or ""
+
     tab.Sections = {}
-    tab.Order = #self.Tabs + 1
 
-    --==============================================================
+    tab.Order =
+        #self.Tabs + 1
+
+    --==========================================================
     -- NAV BUTTON
-    --==============================================================
+    --==========================================================
 
-    local navButton = makeButton(self.NavList)
+    local navButton =
+        makeButton(self.NavList)
 
-    navButton.Size = UDim2.new(
-        1,
-        0,
-        0,
-        42
-    )
+    navButton.Size =
+        UDim2.new(
+            1,
+            0,
+            0,
+            40
+        )
 
-    navButton.LayoutOrder = tab.Order
+    navButton.LayoutOrder =
+        tab.Order
 
     corner(navButton, 5)
 
-    local navAccent = Instance.new("Frame")
-    navAccent.BackgroundColor3 = COLORS.Accent
-    navAccent.Size = UDim2.new(0, 2, 1, -12)
-    navAccent.Position = UDim2.fromOffset(0, 6)
+    local navAccent =
+        Instance.new("Frame")
+
+    navAccent.Size =
+        UDim2.new(
+            0,
+            2,
+            1,
+            -12
+        )
+
+    navAccent.Position =
+        UDim2.fromOffset(
+            0,
+            6
+        )
+
+    navAccent.BackgroundColor3 =
+        COLORS.Accent
+
+    navAccent.BorderSizePixel = 0
     navAccent.Visible = false
-    navAccent.Parent = navButton
+
+    navAccent.Parent =
+        navButton
 
     corner(navAccent, 1)
 
-    local navIcon = icon(
-        navButton,
-        tab.Icon ~= "" and tab.Icon or "•"
-    )
+    local navIcon =
+        label(
+            navButton,
+            tab.Icon ~= ""
+                and tab.Icon
+                or "•",
+            13,
+            Enum.Font.GothamMedium,
+            COLORS.Muted
+        )
 
-    navIcon.Size = UDim2.fromOffset(22, 42)
-    navIcon.Position = UDim2.fromOffset(10, 0)
+    navIcon.Size =
+        UDim2.fromOffset(
+            20,
+            40
+        )
 
-    local navText = label(
-        navButton,
-        tab.Name,
-        14,
-        Enum.Font.Gotham,
-        COLORS.Muted
-    )
+    navIcon.Position =
+        UDim2.fromOffset(
+            10,
+            0
+        )
 
-    navText.Position = UDim2.fromOffset(37, 0)
-    navText.Size = UDim2.new(1, -43, 1, 0)
+    navIcon.TextXAlignment =
+        Enum.TextXAlignment.Center
 
-    --==============================================================
+    local navText =
+        label(
+            navButton,
+            tab.Name,
+            13,
+            Enum.Font.Gotham,
+            COLORS.Muted
+        )
+
+    navText.Position =
+        UDim2.fromOffset(
+            36,
+            0
+        )
+
+    navText.Size =
+        UDim2.new(
+            1,
+            -42,
+            1,
+            0
+        )
+
+    --==========================================================
     -- RAIL BUTTON
-    --==============================================================
+    --==========================================================
 
-    local railButton = makeButton(self.RailTabs)
+    local railButton =
+        makeButton(self.RailTabs)
 
-    railButton.Size = UDim2.fromOffset(40, 40)
-    railButton.LayoutOrder = tab.Order
+    railButton.Size =
+        UDim2.fromOffset(
+            40,
+            40
+        )
+
+    railButton.LayoutOrder =
+        tab.Order
 
     corner(railButton, 5)
 
-    local railIcon = icon(
-        railButton,
-        tab.Icon ~= "" and tab.Icon or "•"
-    )
+    local railIcon =
+        label(
+            railButton,
+            tab.Icon ~= ""
+                and tab.Icon
+                or "•",
+            13,
+            Enum.Font.GothamMedium,
+            COLORS.Muted
+        )
 
-    railIcon.Size = UDim2.fromScale(1, 1)
+    railIcon.Size =
+        UDim2.fromScale(
+            1,
+            1
+        )
 
-    --==============================================================
+    railIcon.TextXAlignment =
+        Enum.TextXAlignment.Center
+
+    --==========================================================
     -- PAGE
-    --==============================================================
+    --==========================================================
 
-    local page = Instance.new("ScrollingFrame")
+    local page =
+        Instance.new("ScrollingFrame")
 
-    page.Name = tab.Name:gsub("%W", "") .. "Page"
+    page.Name =
+        tab.Name:gsub("%W", "")
+        .. "Page"
+
+    page.Position =
+        UDim2.fromOffset(
+            16,
+            50
+        )
+
+    page.Size =
+        UDim2.new(
+            1,
+            -32,
+            1,
+            -60
+        )
+
     page.BackgroundTransparency = 1
     page.BorderSizePixel = 0
 
-    page.Position = UDim2.fromOffset(
-        16,
-        54
-    )
-
-    page.Size = UDim2.new(
-        1,
-        -32,
-        1,
-        -64
-    )
-
     page.ScrollBarThickness = 2
-    page.ScrollBarImageColor3 = COLORS.Border
-    page.CanvasSize = UDim2.fromOffset(0, 0)
-    page.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    page.ScrollingDirection = Enum.ScrollingDirection.Y
+
+    page.ScrollBarImageColor3 =
+        COLORS.Border
+
+    page.ScrollBarImageTransparency =
+        0
+
+    page.CanvasSize =
+        UDim2.fromOffset(0, 0)
+
+    page.AutomaticCanvasSize =
+        Enum.AutomaticSize.Y
+
+    page.ScrollingDirection =
+        Enum.ScrollingDirection.Y
+
     page.Visible = false
-    page.Parent = self.Content
+
+    page.Parent =
+        self.Content
 
     padding(
         page,
@@ -717,10 +1191,17 @@ function Aether:CreateTab(options)
         14
     )
 
-    local layout = Instance.new("UIListLayout")
-    layout.Padding = UDim.new(0, 12)
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Parent = page
+    local pageLayout =
+        Instance.new("UIListLayout")
+
+    pageLayout.Padding =
+        UDim.new(0, 12)
+
+    pageLayout.SortOrder =
+        Enum.SortOrder.LayoutOrder
+
+    pageLayout.Parent =
+        page
 
     tab.Page = page
     tab.NavButton = navButton
@@ -729,18 +1210,21 @@ function Aether:CreateTab(options)
     tab.NavText = navText
     tab.NavIcon = navIcon
     tab.RailIcon = railIcon
-    tab._order = tab.Order
 
-    --==============================================================
-    -- SELECTION
-    --==============================================================
+    --==========================================================
+    -- SELECT
+    --==========================================================
 
     local function select()
         for _, other in ipairs(self.Tabs) do
-            local active = other == tab
+            local active =
+                other == tab
 
-            other.Page.Visible = active
-            other.NavAccent.Visible = active
+            other.Page.Visible =
+                active
+
+            other.NavAccent.Visible =
+                active
 
             other.NavButton.BackgroundColor3 =
                 active
@@ -768,9 +1252,16 @@ function Aether:CreateTab(options)
                 or COLORS.Muted
         end
 
-        self.PageTitle.Text = tab.Name
-        self.ActiveTab = tab
+        self.ActiveTab =
+            tab
+
+        self.PageTitle.Text =
+            tab.Name
     end
+
+    --==========================================================
+    -- NAV HOVER
+    --==========================================================
 
     navButton.MouseEnter:Connect(function()
         if self.ActiveTab ~= tab then
@@ -779,7 +1270,11 @@ function Aether:CreateTab(options)
                 0.12,
                 {
                     BackgroundColor3 =
-                        Color3.fromRGB(20, 22, 24)
+                        Color3.fromRGB(
+                            20,
+                            22,
+                            24
+                        )
                 }
             )
         end
@@ -792,7 +1287,11 @@ function Aether:CreateTab(options)
                 0.12,
                 {
                     BackgroundColor3 =
-                        Color3.new(0, 0, 0)
+                        Color3.new(
+                            0,
+                            0,
+                            0
+                        )
                 }
             )
         end
@@ -805,7 +1304,11 @@ function Aether:CreateTab(options)
                 0.12,
                 {
                     BackgroundColor3 =
-                        Color3.fromRGB(19, 21, 23)
+                        Color3.fromRGB(
+                            19,
+                            21,
+                            23
+                        )
                 }
             )
         end
@@ -827,53 +1330,73 @@ function Aether:CreateTab(options)
     navButton.MouseButton1Click:Connect(select)
     railButton.MouseButton1Click:Connect(select)
 
-    table.insert(self.Tabs, tab)
+    table.insert(
+        self.Tabs,
+        tab
+    )
 
+    -- Select first tab only.
     if not self.ActiveTab then
         task.defer(select)
     end
 
-    --==============================================================
-    -- CREATE SECTION
-    --==============================================================
+    --==========================================================
+    -- SECTION
+    --==========================================================
 
-    function tab:CreateSection(titleText, sectionOptions)
-        sectionOptions = sectionOptions or {}
+    function tab:CreateSection(
+        titleText,
+        sectionOptions
+    )
+        sectionOptions =
+            sectionOptions or {}
 
         local section = {}
 
-        section.Name = titleText or "SECTION"
+        section.Name =
+            titleText or "SECTION"
+
         section.Controls = {}
 
-        local container = Instance.new("Frame")
+        local container =
+            Instance.new("Frame")
 
-        container.Name = "Section"
-        container.BackgroundColor3 =
-            sectionOptions.Filled == false
-            and Color3.new(0, 0, 0)
-            or COLORS.Panel
+        container.Name =
+            "Section"
 
-        container.BackgroundTransparency =
-            sectionOptions.Filled == false
-            and 1
-            or 0
+        if sectionOptions.Filled == false then
+            container.BackgroundTransparency = 1
+        else
+            container.BackgroundColor3 =
+                COLORS.Panel
+        end
 
         container.BorderSizePixel = 0
 
-        container.Size = UDim2.new(
-            1,
-            0,
-            0,
-            0
-        )
+        container.Size =
+            UDim2.new(
+                1,
+                0,
+                0,
+                0
+            )
 
-        container.AutomaticSize = Enum.AutomaticSize.Y
-        container.LayoutOrder = #tab.Sections + 1
-        container.Parent = page
+        container.AutomaticSize =
+            Enum.AutomaticSize.Y
+
+        container.LayoutOrder =
+            #tab.Sections + 1
+
+        container.Parent =
+            page
 
         if sectionOptions.Filled ~= false then
             corner(container, 5)
-            stroke(container, COLORS.Divider, 1)
+            stroke(
+                container,
+                COLORS.Divider,
+                1
+            )
         end
 
         padding(
@@ -884,156 +1407,233 @@ function Aether:CreateTab(options)
             10
         )
 
-        local heading = label(
-            container,
-            string.upper(section.Name),
-            12,
-            Enum.Font.Gotham,
-            COLORS.Muted
-        )
+        local heading =
+            label(
+                container,
+                string.upper(section.Name),
+                12,
+                Enum.Font.Gotham,
+                COLORS.Muted
+            )
 
-        heading.Size = UDim2.new(
-            1,
-            0,
-            0,
-            20
-        )
+        heading.Size =
+            UDim2.new(
+                1,
+                0,
+                0,
+                20
+            )
 
-        local divider = Instance.new("Frame")
+        local divider =
+            Instance.new("Frame")
 
-        divider.Size = UDim2.new(
-            1,
-            0,
-            0,
-            1
-        )
+        divider.Position =
+            UDim2.fromOffset(
+                0,
+                28
+            )
 
-        divider.Position = UDim2.fromOffset(0, 28)
-        divider.BackgroundColor3 = COLORS.Divider
+        divider.Size =
+            UDim2.new(
+                1,
+                0,
+                0,
+                1
+            )
+
+        divider.BackgroundColor3 =
+            COLORS.Divider
+
         divider.BorderSizePixel = 0
-        divider.Parent = container
 
-        local items = Instance.new("Frame")
+        divider.Parent =
+            container
+
+        local items =
+            Instance.new("Frame")
+
+        items.Position =
+            UDim2.fromOffset(
+                0,
+                38
+            )
+
+        items.Size =
+            UDim2.new(
+                1,
+                0,
+                0,
+                0
+            )
+
+        items.AutomaticSize =
+            Enum.AutomaticSize.Y
 
         items.BackgroundTransparency = 1
-        items.Position = UDim2.fromOffset(0, 38)
 
-        items.Size = UDim2.new(
-            1,
-            0,
-            0,
-            0
-        )
+        items.Parent =
+            container
 
-        items.AutomaticSize = Enum.AutomaticSize.Y
-        items.Parent = container
+        local itemsLayout =
+            Instance.new("UIListLayout")
 
-        local list = Instance.new("UIListLayout")
+        itemsLayout.Padding =
+            UDim.new(0, 1)
 
-        list.Padding = UDim.new(0, 1)
-        list.SortOrder = Enum.SortOrder.LayoutOrder
-        list.Parent = items
+        itemsLayout.SortOrder =
+            Enum.SortOrder.LayoutOrder
 
-        section.Container = container
-        section.Items = items
-        section.Layout = list
+        itemsLayout.Parent =
+            items
 
-        --==========================================================
-        -- ROW BASE
-        --==========================================================
+        section.Container =
+            container
+
+        section.Items =
+            items
+
+        section.Layout =
+            itemsLayout
+
+        --======================================================
+        -- ROW
+        --======================================================
 
         local function rowBase(height)
-            local row = Instance.new("Frame")
+            local row =
+                Instance.new("Frame")
 
             row.BackgroundTransparency = 1
             row.BorderSizePixel = 0
 
-            row.Size = UDim2.new(
-                1,
-                0,
-                0,
-                height or 44
-            )
+            row.Size =
+                UDim2.new(
+                    1,
+                    0,
+                    0,
+                    height or 44
+                )
 
-            row.Parent = items
+            row.Parent =
+                items
 
             return row
         end
 
-        --==========================================================
+        --======================================================
         -- TOGGLE
-        --==========================================================
+        --======================================================
 
         function section:CreateToggle(opts)
             opts = opts or {}
 
-            local row = rowBase(44)
+            local row =
+                rowBase(44)
 
-            local textLabel = label(
-                row,
-                opts.Name or "Toggle",
-                14,
-                Enum.Font.Gotham,
-                COLORS.Text
-            )
+            local textLabel =
+                label(
+                    row,
+                    opts.Name or "Toggle",
+                    14,
+                    Enum.Font.Gotham,
+                    COLORS.Text
+                )
 
-            textLabel.Position = UDim2.fromOffset(0, 0)
+            textLabel.Size =
+                UDim2.new(
+                    1,
+                    -70,
+                    1,
+                    0
+                )
 
-            textLabel.Size = UDim2.new(
-                1,
-                -70,
-                1,
-                0
-            )
+            local toggle =
+                Instance.new("Frame")
 
-            local toggle = Instance.new("Frame")
+            toggle.Size =
+                UDim2.fromOffset(
+                    38,
+                    22
+                )
 
-            toggle.Size = UDim2.fromOffset(38, 22)
-
-            toggle.Position = UDim2.new(
-                1,
-                -38,
-                0.5,
-                -11
-            )
+            toggle.Position =
+                UDim2.new(
+                    1,
+                    -38,
+                    0.5,
+                    -11
+                )
 
             toggle.BackgroundColor3 =
-                Color3.fromRGB(42, 45, 49)
+                Color3.fromRGB(
+                    42,
+                    45,
+                    49
+                )
 
             toggle.BorderSizePixel = 0
             toggle.Parent = row
 
-            corner(toggle, 11)
+            corner(
+                toggle,
+                11
+            )
 
-            local knob = Instance.new("Frame")
+            local knob =
+                Instance.new("Frame")
 
-            knob.Size = UDim2.fromOffset(16, 16)
-            knob.Position = UDim2.fromOffset(3, 3)
+            knob.Size =
+                UDim2.fromOffset(
+                    16,
+                    16
+                )
+
+            knob.Position =
+                UDim2.fromOffset(
+                    3,
+                    3
+                )
 
             knob.BackgroundColor3 =
-                Color3.fromRGB(236, 237, 239)
+                Color3.fromRGB(
+                    236,
+                    237,
+                    239
+                )
 
             knob.BorderSizePixel = 0
-            knob.Parent = toggle
 
-            corner(knob, 8)
+            knob.Parent =
+                toggle
 
-            local hit = makeButton(row)
-
-            hit.Size = UDim2.fromOffset(56, 40)
-
-            hit.Position = UDim2.new(
-                1,
-                -56,
-                0.5,
-                -20
+            corner(
+                knob,
+                8
             )
+
+            local hit =
+                makeButton(row)
+
+            hit.Size =
+                UDim2.fromOffset(
+                    58,
+                    40
+                )
+
+            hit.Position =
+                UDim2.new(
+                    1,
+                    -58,
+                    0.5,
+                    -20
+                )
 
             local state =
                 opts.CurrentValue == true
 
-            local function set(v, fire)
-                state = v == true
+            local function set(value, fire)
+                state =
+                    value == true
 
                 tween(
                     toggle,
@@ -1042,7 +1642,11 @@ function Aether:CreateTab(options)
                         BackgroundColor3 =
                             state
                             and COLORS.Accent
-                            or Color3.fromRGB(42, 45, 49)
+                            or Color3.fromRGB(
+                                42,
+                                45,
+                                49
+                            )
                     }
                 )
 
@@ -1052,25 +1656,41 @@ function Aether:CreateTab(options)
                     {
                         Position =
                             state
-                            and UDim2.fromOffset(19, 3)
-                            or UDim2.fromOffset(3, 3)
+                            and UDim2.fromOffset(
+                                19,
+                                3
+                            )
+                            or UDim2.fromOffset(
+                                3,
+                                3
+                            )
                     }
                 )
 
-                if fire ~= false and opts.Callback then
+                if fire ~= false
+                    and opts.Callback then
+
                     opts.Callback(state)
                 end
             end
 
-            set(state, false)
+            set(
+                state,
+                false
+            )
 
-            hit.MouseButton1Click:Connect(function()
-                set(not state)
-            end)
+            hit.MouseButton1Click:Connect(
+                function()
+                    set(
+                        not state,
+                        true
+                    )
+                end
+            )
 
             return {
-                Set = function(_, v)
-                    set(v, true)
+                Set = function(_, value)
+                    set(value, true)
                 end,
 
                 Get = function()
@@ -1081,106 +1701,144 @@ function Aether:CreateTab(options)
             }
         end
 
-        --==========================================================
+        --======================================================
         -- BUTTON
-        --==========================================================
+        --======================================================
 
         function section:CreateButton(opts)
             opts = opts or {}
 
-            local row = rowBase(44)
+            local row =
+                rowBase(44)
 
-            local buttonTextValue =
+            local name =
+                opts.Name or "Button"
+
+            local actionText =
                 opts.ButtonText or "Action"
 
-            local textLabel = label(
-                row,
-                opts.Name or "Button",
-                14,
-                Enum.Font.Gotham,
-                COLORS.Text
-            )
-
-            textLabel.Position = UDim2.fromOffset(0, 0)
-
-            textLabel.Size = UDim2.new(
-                1,
-                -120,
-                1,
-                0
-            )
-
-            local button = makeButton(row)
-
-            button.AnchorPoint = Vector2.new(1, 0.5)
-
-            button.Position = UDim2.new(
-                1,
-                0,
-                0.5,
-                0
-            )
-
-            local width = math.clamp(
-                getTextWidth(
-                    buttonTextValue,
+            local textLabel =
+                label(
+                    row,
+                    name,
+                    14,
                     Enum.Font.Gotham,
-                    13
-                ) + 24,
-                68,
-                130
-            )
+                    COLORS.Text
+                )
 
-            button.Size = UDim2.fromOffset(
-                width,
-                30
-            )
+            textLabel.Size =
+                UDim2.new(
+                    1,
+                    -120,
+                    1,
+                    0
+                )
 
-            button.BackgroundColor3 = COLORS.Control
+            local button =
+                makeButton(row)
+
+            button.AnchorPoint =
+                Vector2.new(
+                    1,
+                    0.5
+                )
+
+            button.Position =
+                UDim2.new(
+                    1,
+                    0,
+                    0.5,
+                    0
+                )
+
+            local width =
+                math.clamp(
+                    getTextWidth(
+                        actionText,
+                        Enum.Font.Gotham,
+                        13
+                    ) + 24,
+                    68,
+                    130
+                )
+
+            button.Size =
+                UDim2.fromOffset(
+                    width,
+                    30
+                )
+
+            button.BackgroundColor3 =
+                COLORS.Control
+
             button.BorderSizePixel = 0
 
-            corner(button, 4)
-            stroke(button, COLORS.Border, 1)
-
-            local buttonText = label(
+            corner(
                 button,
-                buttonTextValue,
-                13,
-                Enum.Font.Gotham,
-                COLORS.Text
+                4
             )
 
-            buttonText.Size = UDim2.fromScale(1, 1)
+            stroke(
+                button,
+                COLORS.Border,
+                1
+            )
+
+            local buttonText =
+                label(
+                    button,
+                    actionText,
+                    13,
+                    Enum.Font.Gotham,
+                    COLORS.Text
+                )
+
+            buttonText.Size =
+                UDim2.fromScale(
+                    1,
+                    1
+                )
+
             buttonText.TextXAlignment =
                 Enum.TextXAlignment.Center
 
-            button.MouseEnter:Connect(function()
-                tween(
-                    button,
-                    0.12,
-                    {
-                        BackgroundColor3 =
-                            Color3.fromRGB(28, 31, 35)
-                    }
-                )
-            end)
-
-            button.MouseLeave:Connect(function()
-                tween(
-                    button,
-                    0.12,
-                    {
-                        BackgroundColor3 =
-                            COLORS.Control
-                    }
-                )
-            end)
-
-            button.MouseButton1Click:Connect(function()
-                if opts.Callback then
-                    opts.Callback()
+            button.MouseEnter:Connect(
+                function()
+                    tween(
+                        button,
+                        0.12,
+                        {
+                            BackgroundColor3 =
+                                Color3.fromRGB(
+                                    28,
+                                    31,
+                                    35
+                                )
+                        }
+                    )
                 end
-            end)
+            )
+
+            button.MouseLeave:Connect(
+                function()
+                    tween(
+                        button,
+                        0.12,
+                        {
+                            BackgroundColor3 =
+                                COLORS.Control
+                        }
+                    )
+                end
+            )
+
+            button.MouseButton1Click:Connect(
+                function()
+                    if opts.Callback then
+                        opts.Callback()
+                    end
+                end
+            )
 
             return {
                 Fire = function()
@@ -1193,31 +1851,32 @@ function Aether:CreateTab(options)
             }
         end
 
-        --==========================================================
+        --======================================================
         -- DROPDOWN
-        --==========================================================
+        --======================================================
 
         function section:CreateDropdown(opts)
             opts = opts or {}
 
-            local row = rowBase(50)
+            local row =
+                rowBase(50)
 
-            local textLabel = label(
-                row,
-                opts.Name or "Dropdown",
-                14,
-                Enum.Font.Gotham,
-                COLORS.Text
-            )
+            local textLabel =
+                label(
+                    row,
+                    opts.Name or "Dropdown",
+                    14,
+                    Enum.Font.Gotham,
+                    COLORS.Text
+                )
 
-            textLabel.Position = UDim2.fromOffset(0, 0)
-
-            textLabel.Size = UDim2.new(
-                0.45,
-                0,
-                1,
-                0
-            )
+            textLabel.Size =
+                UDim2.new(
+                    0.45,
+                    0,
+                    1,
+                    0
+                )
 
             local selected =
                 opts.CurrentOption
@@ -1228,108 +1887,183 @@ function Aether:CreateTab(options)
                 )
                 or "None"
 
-            local dd = makeButton(row)
+            local dd =
+                makeButton(row)
 
             dd.AnchorPoint =
-                Vector2.new(1, 0.5)
+                Vector2.new(
+                    1,
+                    0.5
+                )
 
-            dd.Position = UDim2.new(
-                1,
-                0,
-                0.5,
-                0
-            )
+            dd.Position =
+                UDim2.new(
+                    1,
+                    0,
+                    0.5,
+                    0
+                )
 
-            dd.Size = UDim2.fromOffset(
-                math.min(
-                    opts.Width or 190,
-                    210
-                ),
-                32
-            )
+            dd.Size =
+                UDim2.fromOffset(
+                    math.min(
+                        opts.Width or 190,
+                        210
+                    ),
+                    32
+                )
 
-            dd.BackgroundColor3 = COLORS.Control
+            dd.BackgroundColor3 =
+                COLORS.Control
 
-            corner(dd, 4)
-            stroke(dd, COLORS.Border, 1)
-
-            local valueText = label(
+            corner(
                 dd,
-                tostring(selected),
-                13,
-                Enum.Font.Gotham,
-                COLORS.Text
+                4
             )
+
+            stroke(
+                dd,
+                COLORS.Border,
+                1
+            )
+
+            local valueText =
+                label(
+                    dd,
+                    tostring(selected),
+                    13,
+                    Enum.Font.Gotham,
+                    COLORS.Text
+                )
 
             valueText.Position =
-                UDim2.fromOffset(11, 0)
+                UDim2.fromOffset(
+                    11,
+                    0
+                )
 
             valueText.Size =
-                UDim2.new(1, -38, 1, 0)
+                UDim2.new(
+                    1,
+                    -38,
+                    1,
+                    0
+                )
 
             valueText.TextTruncate =
                 Enum.TextTruncate.AtEnd
 
-            local chevron = label(
-                dd,
-                "⌄",
-                17,
-                Enum.Font.Gotham,
-                COLORS.Muted
-            )
+            -- ASCII-safe arrow.
+            local arrow =
+                label(
+                    dd,
+                    "v",
+                    11,
+                    Enum.Font.GothamBold,
+                    COLORS.Muted
+                )
 
-            chevron.AnchorPoint =
-                Vector2.new(1, 0.5)
+            arrow.AnchorPoint =
+                Vector2.new(
+                    1,
+                    0.5
+                )
 
-            chevron.Position =
-                UDim2.new(1, -9, 0.5, 0)
+            arrow.Position =
+                UDim2.new(
+                    1,
+                    -10,
+                    0.5,
+                    0
+                )
 
-            chevron.Size =
-                UDim2.fromOffset(18, 20)
+            arrow.Size =
+                UDim2.fromOffset(
+                    16,
+                    18
+                )
 
-            chevron.TextXAlignment =
+            arrow.TextXAlignment =
                 Enum.TextXAlignment.Center
 
-            local dropdownGui = Instance.new("Frame")
+            --==================================================
+            -- DROPDOWN POPUP
+            --==================================================
+
+            local dropdownGui =
+                Instance.new("Frame")
 
             dropdownGui.Name =
                 "AetherDropdown"
 
-            dropdownGui.BackgroundTransparency = 1
+            dropdownGui.BackgroundTransparency =
+                1
+
             dropdownGui.Size =
-                UDim2.fromScale(1, 1)
-
-            dropdownGui.Visible = false
-            dropdownGui.ZIndex = 1000
-            dropdownGui.Parent = self.Library.Gui
-
-            local popup = Instance.new("Frame")
-
-            popup.BackgroundColor3 = COLORS.Control
-            popup.BorderSizePixel = 0
-            popup.ZIndex = 1000
-
-            corner(popup, 4)
-            stroke(popup, COLORS.Border, 1)
-
-            popup.Parent = dropdownGui
-
-            local popupPadding =
-                padding(
-                    popup,
-                    4,
-                    4,
-                    4,
-                    4
+                UDim2.fromScale(
+                    1,
+                    1
                 )
 
-            local popupList =
+            dropdownGui.Visible =
+                false
+
+            dropdownGui.ZIndex =
+                1000
+
+            dropdownGui.Parent =
+                self.Library.Gui
+
+            local popup =
+                Instance.new("ScrollingFrame")
+
+            popup.BackgroundColor3 =
+                COLORS.Control
+
+            popup.BorderSizePixel = 0
+
+            popup.ZIndex =
+                1000
+
+            popup.ScrollBarThickness =
+                2
+
+            popup.ScrollBarImageColor3 =
+                COLORS.Border
+
+            popup.ScrollingDirection =
+                Enum.ScrollingDirection.Y
+
+            popup.Parent =
+                dropdownGui
+
+            corner(
+                popup,
+                4
+            )
+
+            stroke(
+                popup,
+                COLORS.Border,
+                1
+            )
+
+            padding(
+                popup,
+                4,
+                4,
+                4,
+                4
+            )
+
+            local popupLayout =
                 Instance.new("UIListLayout")
 
-            popupList.Padding =
+            popupLayout.Padding =
                 UDim.new(0, 2)
 
-            popupList.Parent = popup
+            popupLayout.Parent =
+                popup
 
             local open = false
 
@@ -1339,7 +2073,9 @@ function Aether:CreateTab(options)
             end
 
             local function rebuild()
-                for _, child in ipairs(popup:GetChildren()) do
+                for _, child in ipairs(
+                    popup:GetChildren()
+                ) do
                     if child:IsA("TextButton") then
                         child:Destroy()
                     end
@@ -1348,17 +2084,26 @@ function Aether:CreateTab(options)
                 local optionsList =
                     opts.Options or {}
 
+                local itemCount =
+                    #optionsList
+
                 local visibleCount =
-                    math.min(#optionsList, 6)
+                    math.min(
+                        itemCount,
+                        6
+                    )
 
                 popup.Size =
                     UDim2.fromOffset(
                         dd.AbsoluteSize.X,
-                        visibleCount * 30 + 8
+                        visibleCount * 30 + 10
                     )
 
-                for index, option in ipairs(optionsList) do
-                    local item = makeButton(popup)
+                for index, option in ipairs(
+                    optionsList
+                ) do
+                    local item =
+                        makeButton(popup)
 
                     item.Size =
                         UDim2.new(
@@ -1368,21 +2113,31 @@ function Aether:CreateTab(options)
                             30
                         )
 
-                    item.LayoutOrder = index
-                    item.ZIndex = 1001
+                    item.LayoutOrder =
+                        index
 
-                    corner(item, 3)
+                    item.ZIndex =
+                        1001
 
-                    local itemText = label(
+                    corner(
                         item,
-                        tostring(option),
-                        13,
-                        Enum.Font.Gotham,
-                        COLORS.Text
+                        3
                     )
 
+                    local itemText =
+                        label(
+                            item,
+                            tostring(option),
+                            13,
+                            Enum.Font.Gotham,
+                            COLORS.Text
+                        )
+
                     itemText.Position =
-                        UDim2.fromOffset(8, 0)
+                        UDim2.fromOffset(
+                            8,
+                            0
+                        )
 
                     itemText.Size =
                         UDim2.new(
@@ -1392,46 +2147,65 @@ function Aether:CreateTab(options)
                             0
                         )
 
-                    itemText.ZIndex = 1002
+                    itemText.ZIndex =
+                        1002
 
-                    item.MouseEnter:Connect(function()
-                        tween(
-                            item,
-                            0.1,
-                            {
-                                BackgroundTransparency = 0,
-                                BackgroundColor3 =
-                                    Color3.fromRGB(
-                                        27,
-                                        30,
-                                        34
-                                    )
-                            }
-                        )
-                    end)
-
-                    item.MouseLeave:Connect(function()
-                        tween(
-                            item,
-                            0.1,
-                            {
-                                BackgroundTransparency = 1
-                            }
-                        )
-                    end)
-
-                    item.MouseButton1Click:Connect(function()
-                        selected = option
-                        valueText.Text =
-                            tostring(option)
-
-                        close()
-
-                        if opts.Callback then
-                            opts.Callback(option)
+                    item.MouseEnter:Connect(
+                        function()
+                            tween(
+                                item,
+                                0.1,
+                                {
+                                    BackgroundTransparency = 0,
+                                    BackgroundColor3 =
+                                        Color3.fromRGB(
+                                            27,
+                                            30,
+                                            34
+                                        )
+                                }
+                            )
                         end
-                    end)
+                    )
+
+                    item.MouseLeave:Connect(
+                        function()
+                            tween(
+                                item,
+                                0.1,
+                                {
+                                    BackgroundTransparency = 1
+                                }
+                            )
+                        end
+                    )
+
+                    item.MouseButton1Click:Connect(
+                        function()
+                            selected =
+                                option
+
+                            valueText.Text =
+                                tostring(
+                                    option
+                                )
+
+                            close()
+
+                            if opts.Callback then
+                                opts.Callback(
+                                    option
+                                )
+                            end
+                        end
+                    )
                 end
+
+                popup.CanvasSize =
+                    UDim2.fromOffset(
+                        0,
+                        itemCount * 32 + 8
+                    )
             end
 
             local function show()
@@ -1439,108 +2213,129 @@ function Aether:CreateTab(options)
 
                 rebuild()
 
-                local absolutePos =
+                local position =
                     dd.AbsolutePosition
 
-                local absoluteSize =
+                local size =
                     dd.AbsoluteSize
 
                 local viewport =
-                    getViewportSize()
+                    viewportSize()
 
                 local popupHeight =
                     popup.Size.Y.Offset
 
                 local x =
-                    absolutePos.X
+                    position.X
 
                 local y =
-                    absolutePos.Y +
-                    absoluteSize.Y +
+                    position.Y +
+                    size.Y +
                     5
 
-                if y + popupHeight > viewport.Y - 8 then
+                if
+                    y + popupHeight
+                    >
+                    viewport.Y - 8
+                then
+
                     y =
-                        absolutePos.Y -
+                        position.Y -
                         popupHeight -
                         5
                 end
 
-                x = math.clamp(
-                    x,
-                    8,
-                    math.max(
+                x =
+                    math.clamp(
+                        x,
                         8,
-                        viewport.X -
-                        absoluteSize.X -
-                        8
+                        math.max(
+                            8,
+                            viewport.X -
+                            size.X -
+                            8
+                        )
                     )
-                )
 
                 popup.Position =
-                    UDim2.fromOffset(x, y)
+                    UDim2.fromOffset(
+                        x,
+                        y
+                    )
 
-                dropdownGui.Visible = true
+                dropdownGui.Visible =
+                    true
+
                 open = true
             end
 
-            dd.MouseButton1Click:Connect(function()
-                if open then
-                    close()
-                else
-                    show()
+            dd.MouseButton1Click:Connect(
+                function()
+                    if open then
+                        close()
+                    else
+                        show()
+                    end
                 end
-            end)
+            )
 
             table.insert(
                 self.Library.Connections,
+
                 UserInputService.InputBegan:Connect(
                     function(input)
                         if not open then
                             return
                         end
 
-                        if input.UserInputType ==
+                        if input.UserInputType ~=
                             Enum.UserInputType.MouseButton1 then
+                            return
+                        end
 
-                            local mousePos =
-                                input.Position
+                        local mouse =
+                            input.Position
 
-                            local pos =
-                                popup.AbsolutePosition
+                        local popupPosition =
+                            popup.AbsolutePosition
 
-                            local size =
-                                popup.AbsoluteSize
+                        local popupSize =
+                            popup.AbsoluteSize
 
-                            local inside =
-                                mousePos.X >= pos.X
-                                and mousePos.X <=
-                                    pos.X + size.X
-                                and mousePos.Y >= pos.Y
-                                and mousePos.Y <=
-                                    pos.Y + size.Y
+                        local ddPosition =
+                            dd.AbsolutePosition
 
-                            local ddPos =
-                                dd.AbsolutePosition
+                        local ddSize =
+                            dd.AbsoluteSize
 
-                            local ddSize =
-                                dd.AbsoluteSize
+                        local insidePopup =
+                            mouse.X >= popupPosition.X
+                            and mouse.X <=
+                                popupPosition.X +
+                                popupSize.X
+                            and mouse.Y >=
+                                popupPosition.Y
+                            and mouse.Y <=
+                                popupPosition.Y +
+                                popupSize.Y
 
-                            local inDropdown =
-                                mousePos.X >=
-                                    ddPos.X
-                                and mousePos.X <=
-                                    ddPos.X + ddSize.X
-                                and mousePos.Y >=
-                                    ddPos.Y
-                                and mousePos.Y <=
-                                    ddPos.Y + ddSize.Y
+                        local insideDropdown =
+                            mouse.X >= ddPosition.X
+                            and mouse.X <=
+                                ddPosition.X +
+                                ddSize.X
+                            and mouse.Y >=
+                                ddPosition.Y
+                            and mouse.Y <=
+                                ddPosition.Y +
+                                ddSize.Y
 
-                            if not inside
-                                and not inDropdown then
-
-                                close()
-                            end
+                        if
+                            not insidePopup
+                            and
+                            not insideDropdown
+                        then
+                            close()
                         end
                     end
                 )
@@ -1548,12 +2343,18 @@ function Aether:CreateTab(options)
 
             return {
                 Set = function(_, value)
-                    selected = value
+                    selected =
+                        value
+
                     valueText.Text =
-                        tostring(value)
+                        tostring(
+                            value
+                        )
 
                     if opts.Callback then
-                        opts.Callback(value)
+                        opts.Callback(
+                            value
+                        )
                     end
                 end,
 
@@ -1567,28 +2368,32 @@ function Aether:CreateTab(options)
             }
         end
 
-        --==========================================================
+        --======================================================
         -- SLIDER
-        --==========================================================
+        --======================================================
 
         function section:CreateSlider(opts)
             opts = opts or {}
 
-            local row = rowBase(58)
+            local row =
+                rowBase(58)
 
-            local textLabel = label(
-                row,
-                opts.Name or "Slider",
-                14,
-                Enum.Font.Gotham,
-                COLORS.Text
-            )
-
-            textLabel.Position =
-                UDim2.fromOffset(0, 0)
+            local textLabel =
+                label(
+                    row,
+                    opts.Name or "Slider",
+                    14,
+                    Enum.Font.Gotham,
+                    COLORS.Text
+                )
 
             textLabel.Size =
-                UDim2.new(0, 150, 0, 22)
+                UDim2.new(
+                    0,
+                    150,
+                    0,
+                    22
+                )
 
             local min =
                 tonumber(
@@ -1618,114 +2423,348 @@ function Aether:CreateTab(options)
                 )
                 or min
 
-            local valueLabel = label(
-                row,
-                tostring(value),
-                12,
-                Enum.Font.Gotham,
-                COLORS.Muted
-            )
+            local valueLabel =
+                label(
+                    row,
+                    tostring(value),
+                    12,
+                    Enum.Font.Gotham,
+                    COLORS.Muted
+                )
 
             valueLabel.AnchorPoint =
                 Vector2.new(1, 0)
 
             valueLabel.Position =
-                UDim2.new(1, 0, 0, 0)
+                UDim2.new(
+                    1,
+                    0,
+                    0,
+                    0
+                )
 
             valueLabel.Size =
-                UDim2.fromOffset(70, 22)
+                UDim2.fromOffset(
+                    70,
+                    22
+                )
 
             valueLabel.TextXAlignment =
                 Enum.TextXAlignment.Right
 
-            local track = Instance.new("Frame")
+            --==================================================
+            -- TRACK
+            --==================================================
+
+            local track =
+                Instance.new("Frame")
 
             track.Position =
-                UDim2.new(0, 0, 0, 34)
+                UDim2.new(
+                    0,
+                    0,
+                    0,
+                    34
+                )
 
             track.Size =
-                UDim2.new(1, 0, 0, 4)
+                UDim2.new(
+                    1,
+                    0,
+                    0,
+                    4
+                )
 
             track.BackgroundColor3 =
-                Color3.fromRGB(43, 46, 50)
+                Color3.fromRGB(
+                    43,
+                    46,
+                    50
+                )
 
             track.BorderSizePixel = 0
-            track.Parent = row
 
-            corner(track, 2)
+            track.Parent =
+                row
 
-            local fill = Instance.new("Frame")
+            corner(
+                track,
+                2
+            )
+
+            local fill =
+                Instance.new("Frame")
 
             fill.Size =
-                UDim2.fromScale(0, 1)
+                UDim2.fromScale(
+                    0,
+                    1
+                )
 
             fill.BackgroundColor3 =
                 COLORS.Accent
 
             fill.BorderSizePixel = 0
-            fill.Parent = track
 
-            corner(fill, 2)
+            fill.Parent =
+                track
 
-            local knob = Instance.new("Frame")
+            corner(
+                fill,
+                2
+            )
+
+            local knob =
+                Instance.new("Frame")
 
             knob.AnchorPoint =
-                Vector2.new(0.5, 0.5)
+                Vector2.new(
+                    0.5,
+                    0.5
+                )
 
             knob.Size =
-                UDim2.fromOffset(12, 12)
+                UDim2.fromOffset(
+                    12,
+                    12
+                )
 
             knob.BackgroundColor3 =
                 COLORS.Text
 
             knob.BorderSizePixel = 0
-            knob.Parent = track
 
-            corner(knob, 6)
+            knob.Parent =
+                track
 
-            local hit = makeButton(row)
+            corner(
+                knob,
+                6
+            )
+
+            --==================================================
+            -- HITBOX
+            --==================================================
+
+            local hit =
+                Instance.new("TextButton")
+
+            hit.BackgroundTransparency = 1
+            hit.BorderSizePixel = 0
+            hit.Text = ""
 
             hit.Position =
-                UDim2.new(0, 0, 0, 18)
+                UDim2.new(
+                    0,
+                    -6,
+                    0,
+                    22
+                )
 
             hit.Size =
-                UDim2.new(1, 0, 0, 30)
+                UDim2.new(
+                    1,
+                    12,
+                    0,
+                    26
+                )
 
-            hit.ZIndex = 5
+            hit.ZIndex = 10
+
+            hit.Parent =
+                row
 
             local draggingSlider = false
 
-            local function applyValue(newValue, fire)
-                newValue = math.clamp(
-                    newValue,
-                    min,
-                    max
-                )
+            local function updateSlider(
+                mouseX,
+                fire
+            )
+                local trackStart =
+                    track.AbsolutePosition.X
+
+                local trackWidth =
+                    track.AbsoluteSize.X
+
+                if trackWidth <= 0 then
+                    return
+                end
+
+                local alpha =
+                    math.clamp(
+                        (
+                            mouseX -
+                            trackStart
+                        ) / trackWidth,
+                        0,
+                        1
+                    )
+
+                local newValue =
+                    min +
+                    (
+                        max - min
+                    ) * alpha
 
                 if opts.Rounding then
-                    local r =
-                        tonumber(opts.Rounding)
-                        or 1
+                    local rounding =
+                        tonumber(
+                            opts.Rounding
+                        ) or 1
 
-                    if r > 0 then
+                    if rounding > 0 then
                         newValue =
                             math.floor(
-                                newValue / r + 0.5
-                            ) * r
+                                newValue /
+                                    rounding
+                                + 0.5
+                            ) * rounding
                     end
                 end
 
-                newValue = math.clamp(
-                    newValue,
-                    min,
-                    max
-                )
+                newValue =
+                    math.clamp(
+                        newValue,
+                        min,
+                        max
+                    )
 
-                value = newValue
+                value =
+                    newValue
+
+                local finalAlpha =
+                    (
+                        value - min
+                    ) /
+                    (
+                        max - min
+                    )
+
+                valueLabel.Text =
+                    tostring(value)
+
+                fill.Size =
+                    UDim2.fromScale(
+                        finalAlpha,
+                        1
+                    )
+
+                knob.Position =
+                    UDim2.new(
+                        finalAlpha,
+                        0,
+                        0.5,
+                        0
+                    )
+
+                if fire
+                    and opts.Callback then
+
+                    opts.Callback(value)
+                end
+            end
+
+            hit.InputBegan:Connect(
+                function(input)
+                    if
+                        input.UserInputType ==
+                        Enum.UserInputType.MouseButton1
+                    then
+
+                        draggingSlider = true
+
+                        updateSlider(
+                            input.Position.X,
+                            true
+                        )
+                    end
+                end
+            )
+
+            table.insert(
+                self.Library.Connections,
+
+                UserInputService.InputChanged:Connect(
+                    function(input)
+                        if not draggingSlider then
+                            return
+                        end
+
+                        if
+                            input.UserInputType ==
+                            Enum.UserInputType.MouseMovement
+                        then
+
+                            updateSlider(
+                                UserInputService:GetMouseLocation().X,
+                                true
+                            )
+                        end
+                    end
+                )
+            )
+
+            table.insert(
+                self.Library.Connections,
+
+                UserInputService.InputEnded:Connect(
+                    function(input)
+                        if
+                            input.UserInputType ==
+                            Enum.UserInputType.MouseButton1
+                        then
+
+                            draggingSlider = false
+                        end
+                    end
+                )
+            )
+
+            local function set(
+                newValue,
+                fire
+            )
+                newValue =
+                    math.clamp(
+                        tonumber(newValue)
+                            or min,
+                        min,
+                        max
+                    )
+
+                if opts.Rounding then
+                    local rounding =
+                        tonumber(
+                            opts.Rounding
+                        ) or 1
+
+                    if rounding > 0 then
+                        newValue =
+                            math.floor(
+                                newValue /
+                                    rounding
+                                + 0.5
+                            ) * rounding
+                    end
+                end
+
+                newValue =
+                    math.clamp(
+                        newValue,
+                        min,
+                        max
+                    )
+
+                value =
+                    newValue
 
                 local alpha =
-                    (value - min) /
-                    (max - min)
+                    (
+                        value - min
+                    ) /
+                    (
+                        max - min
+                    )
 
                 valueLabel.Text =
                     tostring(value)
@@ -1744,91 +2783,22 @@ function Aether:CreateTab(options)
                         0
                     )
 
-                if fire ~= false
+                if fire
                     and opts.Callback then
 
                     opts.Callback(value)
                 end
             end
 
-            local function setFromX(x, fire)
-                local alpha =
-                    math.clamp(
-                        (
-                            x -
-                            track.AbsolutePosition.X
-                        ) /
-                        math.max(
-                            track.AbsoluteSize.X,
-                            1
-                        ),
-                        0,
-                        1
-                    )
-
-                local raw =
-                    min +
-                    (
-                        max - min
-                    ) * alpha
-
-                applyValue(
-                    raw,
-                    fire
-                )
-            end
-
-            hit.InputBegan:Connect(function(input)
-                if input.UserInputType ==
-                    Enum.UserInputType.MouseButton1 then
-
-                    draggingSlider = true
-
-                    setFromX(
-                        input.Position.X,
-                        true
-                    )
-                end
-            end)
-
-            table.insert(
-                self.Library.Connections,
-                UserInputService.InputChanged:Connect(
-                    function(input)
-                        if draggingSlider
-                            and
-                            input.UserInputType ==
-                                Enum.UserInputType.MouseMovement then
-
-                            setFromX(
-                                input.Position.X,
-                                true
-                            )
-                        end
-                    end
-                )
+            set(
+                value,
+                false
             )
-
-            table.insert(
-                self.Library.Connections,
-                UserInputService.InputEnded:Connect(
-                    function(input)
-                        if input.UserInputType ==
-                            Enum.UserInputType.MouseButton1 then
-
-                            draggingSlider = false
-                        end
-                    end
-                )
-            )
-
-            applyValue(value, false)
 
             return {
-                Set = function(_, v)
-                    applyValue(
-                        tonumber(v)
-                            or min,
+                Set = function(_, newValue)
+                    set(
+                        newValue,
                         true
                     )
                 end,
@@ -1841,27 +2811,29 @@ function Aether:CreateTab(options)
             }
         end
 
-        --==========================================================
+        --======================================================
         -- KEYBIND
-        --==========================================================
+        --======================================================
 
         function section:CreateKeybind(opts)
             opts = opts or {}
 
-            local row = rowBase(44)
+            local row =
+                rowBase(44)
 
-            local textLabel = label(
-                row,
-                opts.Name or "Keybind",
-                14,
-                Enum.Font.Gotham,
-                COLORS.Text
-            )
+            local textLabel =
+                label(
+                    row,
+                    opts.Name or "Keybind",
+                    14,
+                    Enum.Font.Gotham,
+                    COLORS.Text
+                )
 
             textLabel.Size =
                 UDim2.new(
                     1,
-                    -110,
+                    -108,
                     1,
                     0
                 )
@@ -1874,10 +2846,14 @@ function Aether:CreateTab(options)
 
             local waiting = false
 
-            local chip = makeButton(row)
+            local chip =
+                makeButton(row)
 
             chip.AnchorPoint =
-                Vector2.new(1, 0.5)
+                Vector2.new(
+                    1,
+                    0.5
+                )
 
             chip.Position =
                 UDim2.new(
@@ -1888,77 +2864,170 @@ function Aether:CreateTab(options)
                 )
 
             chip.Size =
-                UDim2.fromOffset(92, 30)
+                UDim2.fromOffset(
+                    92,
+                    30
+                )
 
             chip.BackgroundColor3 =
                 COLORS.Control
 
-            corner(chip, 4)
-            stroke(chip, COLORS.Border, 1)
+            chip.BorderSizePixel = 0
 
-            local chipText = label(
+            corner(
                 chip,
-                bind.Name,
-                12,
-                Enum.Font.Gotham,
-                COLORS.Text
+                4
             )
 
+            stroke(
+                chip,
+                COLORS.Border,
+                1
+            )
+
+            -- Keep key text completely ASCII.
+            local chipText =
+                label(
+                    chip,
+                    bind.Name,
+                    12,
+                    Enum.Font.Gotham,
+                    COLORS.Text
+                )
+
             chipText.Size =
-                UDim2.fromScale(1, 1)
+                UDim2.fromScale(
+                    1,
+                    1
+                )
 
             chipText.TextXAlignment =
                 Enum.TextXAlignment.Center
 
-            local function fire(input)
-                if opts.Callback then
-                    opts.Callback(input)
+            chip.MouseEnter:Connect(
+                function()
+                    tween(
+                        chip,
+                        0.12,
+                        {
+                            BackgroundColor3 =
+                                Color3.fromRGB(
+                                    27,
+                                    30,
+                                    34
+                                )
+                        }
+                    )
                 end
-            end
+            )
 
-            chip.MouseButton1Click:Connect(function()
-                waiting = true
-                chipText.Text = "Press key..."
-            end)
+            chip.MouseLeave:Connect(
+                function()
+                    if not waiting then
+                        tween(
+                            chip,
+                            0.12,
+                            {
+                                BackgroundColor3 =
+                                    COLORS.Control
+                            }
+                        )
+                    end
+                end
+            )
+
+            chip.MouseButton1Click:Connect(
+                function()
+                    waiting = true
+
+                    chipText.Text =
+                        "Press key..."
+
+                    tween(
+                        chip,
+                        0.12,
+                        {
+                            BackgroundColor3 =
+                                Color3.fromRGB(
+                                    28,
+                                    31,
+                                    35
+                                )
+                        }
+                    )
+                end
+            )
 
             local connection
 
             connection =
                 UserInputService.InputBegan:Connect(
-                    function(input, processed)
-                        if waiting
-                            and
-                            input.UserInputType ==
-                                Enum.UserInputType.Keyboard then
+                    function(
+                        input,
+                        processed
+                    )
+                        if waiting then
+                            if
+                                input.UserInputType ==
+                                Enum.UserInputType.Keyboard
+                            then
 
-                            bind = input.KeyCode
-                            waiting = false
+                                bind =
+                                    input.KeyCode
 
-                            chipText.Text =
-                                bind.Name
+                                waiting = false
 
-                            if opts.SetCallback then
-                                opts.SetCallback(bind)
+                                chipText.Text =
+                                    bind.Name
+
+                                tween(
+                                    chip,
+                                    0.12,
+                                    {
+                                        BackgroundColor3 =
+                                            COLORS.Control
+                                    }
+                                )
+
+                                if opts.SetCallback then
+                                    opts.SetCallback(
+                                        bind
+                                    )
+                                end
+
+                                return
                             end
-
-                            return
                         end
 
-                        if not processed
-                            and input.KeyCode == bind then
+                        if
+                            not processed
+                            and
+                            input.UserInputType ==
+                                Enum.UserInputType.Keyboard
+                            and
+                            input.KeyCode ==
+                                bind
+                        then
 
-                            fire(input)
+                            if opts.Callback then
+                                opts.Callback(
+                                    input
+                                )
+                            end
                         end
                     end
                 )
 
             return {
                 Set = function(_, key)
-                    if typeof(key) ~= "EnumItem" then
+                    if typeof(key) ~=
+                        "EnumItem" then
                         return
                     end
 
-                    bind = key
+                    bind =
+                        key
+
                     chipText.Text =
                         key.Name
                 end,
@@ -1980,25 +3049,27 @@ function Aether:CreateTab(options)
             }
         end
 
-        --==========================================================
+        --======================================================
         -- STATUS
-        --==========================================================
+        --======================================================
 
         function section:CreateStatus(opts)
             opts = opts or {}
 
-            local row = rowBase(40)
+            local row =
+                rowBase(40)
 
             local active =
                 opts.Active == true
 
-            local textLabel = label(
-                row,
-                opts.Name or "Status",
-                14,
-                Enum.Font.Gotham,
-                COLORS.Text
-            )
+            local textLabel =
+                label(
+                    row,
+                    opts.Name or "Status",
+                    14,
+                    Enum.Font.Gotham,
+                    COLORS.Text
+                )
 
             textLabel.Size =
                 UDim2.new(
@@ -2008,13 +3079,20 @@ function Aether:CreateTab(options)
                     0
                 )
 
-            local dot = Instance.new("Frame")
+            local dot =
+                Instance.new("Frame")
 
             dot.Size =
-                UDim2.fromOffset(7, 7)
+                UDim2.fromOffset(
+                    7,
+                    7
+                )
 
             dot.AnchorPoint =
-                Vector2.new(0, 0.5)
+                Vector2.new(
+                    0,
+                    0.5
+                )
 
             dot.Position =
                 UDim2.new(
@@ -2032,25 +3110,32 @@ function Aether:CreateTab(options)
             dot.BorderSizePixel = 0
             dot.Parent = row
 
-            corner(dot, 4)
+            corner(
+                dot,
+                4
+            )
 
-            local statusText = label(
-                row,
-                opts.Text
+            local statusText =
+                label(
+                    row,
+                    opts.Text
                     or (
                         active
                         and "Active"
                         or "Inactive"
                     ),
-                13,
-                Enum.Font.Gotham,
-                active
+                    13,
+                    Enum.Font.Gotham,
+                    active
                     and COLORS.Success
                     or COLORS.Muted
-            )
+                )
 
             statusText.AnchorPoint =
-                Vector2.new(1, 0.5)
+                Vector2.new(
+                    1,
+                    0.5
+                )
 
             statusText.Position =
                 UDim2.new(
@@ -2061,12 +3146,18 @@ function Aether:CreateTab(options)
                 )
 
             statusText.Size =
-                UDim2.fromOffset(68, 22)
+                UDim2.fromOffset(
+                    68,
+                    22
+                )
 
             statusText.TextXAlignment =
                 Enum.TextXAlignment.Right
 
-            local function set(isActive, text)
+            local function set(
+                isActive,
+                text
+            )
                 dot.BackgroundColor3 =
                     isActive
                     and COLORS.Success
@@ -2104,17 +3195,20 @@ function Aether:CreateTab(options)
 end
 
 --==============================================================
--- NOTIFICATIONS
+-- NOTIFY
 --==============================================================
 
 function Aether:Notify(options)
     options = options or {}
 
     local holder =
-        self.Gui:FindFirstChild("Notifications")
+        self.Gui:FindFirstChild(
+            "Notifications"
+        )
 
     if not holder then
-        holder = Instance.new("Frame")
+        holder =
+            Instance.new("Frame")
 
         holder.Name =
             "Notifications"
@@ -2136,11 +3230,14 @@ function Aether:Notify(options)
                 300
             )
 
-        holder.BackgroundTransparency = 1
+        holder.BackgroundTransparency =
+            1
 
-        holder.ZIndex = 900
+        holder.ZIndex =
+            900
 
-        holder.Parent = self.Gui
+        holder.Parent =
+            self.Gui
 
         local list =
             Instance.new("UIListLayout")
@@ -2154,78 +3251,116 @@ function Aether:Notify(options)
         list.Padding =
             UDim.new(0, 7)
 
-        list.Parent = holder
+        list.Parent =
+            holder
     end
 
-    local n = Instance.new("Frame")
+    local notification =
+        Instance.new("Frame")
 
-    n.Size =
-        UDim2.fromOffset(290, 62)
+    notification.Size =
+        UDim2.fromOffset(
+            290,
+            62
+        )
 
-    n.BackgroundColor3 =
+    notification.BackgroundColor3 =
         COLORS.Panel
 
-    n.BorderSizePixel = 0
-    n.ZIndex = 901
-    n.Parent = holder
+    notification.BorderSizePixel = 0
 
-    corner(n, 5)
-    stroke(n, COLORS.Border, 1)
+    notification.ZIndex = 901
 
-    local title = label(
-        n,
-        options.Title or self.Name,
-        13,
-        Enum.Font.GothamMedium,
-        COLORS.Text
+    notification.Parent =
+        holder
+
+    corner(
+        notification,
+        5
     )
 
+    stroke(
+        notification,
+        COLORS.Border,
+        1
+    )
+
+    local title =
+        label(
+            notification,
+            options.Title
+            or self.Name,
+            13,
+            Enum.Font.GothamMedium,
+            COLORS.Text
+        )
+
     title.Position =
-        UDim2.fromOffset(12, 7)
+        UDim2.fromOffset(
+            12,
+            7
+        )
 
     title.Size =
-        UDim2.new(1, -24, 0, 18)
+        UDim2.new(
+            1,
+            -24,
+            0,
+            18
+        )
 
     title.ZIndex = 902
 
-    local message = label(
-        n,
-        options.Content or "",
-        12,
-        Enum.Font.Gotham,
-        COLORS.Muted
-    )
+    local message =
+        label(
+            notification,
+            options.Content or "",
+            12,
+            Enum.Font.Gotham,
+            COLORS.Muted
+        )
 
     message.Position =
-        UDim2.fromOffset(12, 26)
+        UDim2.fromOffset(
+            12,
+            26
+        )
 
     message.Size =
-        UDim2.new(1, -24, 0, 27)
+        UDim2.new(
+            1,
+            -24,
+            0,
+            27
+        )
 
     message.TextWrapped = true
     message.ZIndex = 902
 
     local duration =
-        tonumber(options.Duration)
-        or 3
+        tonumber(
+            options.Duration
+        ) or 3
 
     task.delay(
         duration,
         function()
-            if n.Parent then
-                tween(
-                    n,
-                    0.18,
-                    {
-                        BackgroundTransparency = 1
-                    }
-                )
+            if not notification.Parent then
+                return
+            end
 
-                task.wait(0.18)
+            tween(
+                notification,
+                0.18,
+                {
+                    BackgroundTransparency = 1
+                }
+            )
 
-                if n.Parent then
-                    n:Destroy()
-                end
+            task.wait(0.18)
+
+            if notification.Parent then
+                notification:Destroy()
             end
         end
     )
@@ -2242,13 +3377,19 @@ function Aether:Destroy()
 
     self.Destroyed = true
 
-    for _, connection in ipairs(self.Connections) do
-        pcall(function()
-            connection:Disconnect()
-        end)
+    for _, connection in ipairs(
+        self.Connections
+    ) do
+        pcall(
+            function()
+                connection:Disconnect()
+            end
+        )
     end
 
-    table.clear(self.Connections)
+    table.clear(
+        self.Connections
+    )
 
     if self.Gui then
         self.Gui:Destroy()
@@ -2256,15 +3397,11 @@ function Aether:Destroy()
 end
 
 --==============================================================
--- RAYFIELD-STYLE COMPATIBILITY
+-- COMPATIBILITY
 --==============================================================
 
 function Aether:CreateWindow(options)
     return Aether.new(options)
 end
-
-return Aether
-
-]])()
 
 return Aether
