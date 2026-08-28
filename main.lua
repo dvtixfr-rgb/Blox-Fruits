@@ -181,6 +181,7 @@ function Aether.new(options)
     close.MouseButton1Click:Connect(function() self:Destroy() end)
     minimize.MouseButton1Click:Connect(function()
         self.Minimized = not self.Minimized
+        headerDivider.Visible = not self.Minimized
         tween(main, 0.15, { Size = UDim2.fromOffset(self.Width, self.Minimized and HEADER_HEIGHT or self.Height) })
     end)
 
