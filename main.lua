@@ -590,7 +590,7 @@ function Aether:CreateTab(options)
 
             attachButtonEffects(ddButton, COLORS.Control, COLORS.ControlHover, COLORS.ControlPress)
 
-            local valText = label(ddButton, tostring(selected) .. "  v", 13, Enum.Font.Gotham, COLORS.Text)
+            local valText = label(ddButton, tostring(selected), 13, Enum.Font.Gotham, COLORS.Text)
             valText.Position = UDim2.fromOffset(10, 0)
             valText.Size = UDim2.new(1, -20, 1, 0)
 
@@ -616,7 +616,7 @@ function Aether:CreateTab(options)
 
                 optBtn.MouseButton1Click:Connect(function()
                     selected = optName
-                    valText.Text = tostring(selected) .. "  v"
+                    valText.Text = tostring(selected)
                     isOpen = false
                     tween(container, 0.15, { Size = UDim2.new(1, 0, 0, 36) })
                     if opts.Callback then opts.Callback(selected) end
@@ -629,7 +629,7 @@ function Aether:CreateTab(options)
                 tween(container, 0.15, { Size = UDim2.new(1, 0, 0, targetH) })
             end)
 
-            return { Set = function(_, v) selected = v; valText.Text = tostring(v) .. "  v" end, Get = function() return selected end }
+            return { Set = function(_, v) selected = v; valText.Text = tostring(v) end, Get = function() return selected end }
         end
 
         return section
