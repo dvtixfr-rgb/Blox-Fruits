@@ -1,4 +1,4 @@
---// Bloxium UI Library (1.2x Scaled, Sharpened Corners)
+--// Bloxium UI Library (Clean Corners, Borderless)
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
@@ -16,7 +16,6 @@ local COLORS = {
     Control     = Color3.fromRGB(25, 28, 33),
     ControlHover= Color3.fromRGB(42, 47, 56), 
     ControlPress= Color3.fromRGB(65, 72, 85),
-    Border      = Color3.fromRGB(38, 42, 48),
     Divider     = Color3.fromRGB(30, 33, 38),
     Text        = Color3.fromRGB(240, 242, 245),
     Muted       = Color3.fromRGB(140, 145, 155),
@@ -29,15 +28,7 @@ end
 
 local function corner(parent, radius)
     local object = Instance.new("UICorner")
-    object.CornerRadius = UDim.new(0, radius or 3) -- Default tightened to 3
-    object.Parent = parent
-    return object
-end
-
-local function stroke(parent, color, thickness)
-    local object = Instance.new("UIStroke")
-    object.Color = color or COLORS.Border
-    object.Thickness = thickness or 1
+    object.CornerRadius = UDim.new(0, radius or 3)
     object.Parent = parent
     return object
 end
@@ -119,24 +110,24 @@ function Bloxium.new(options)
     gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
     self.Gui = gui
 
+    -- Main window frame inherits the Sidebar color to provide clean outer corners
     local main = Instance.new("Frame")
     main.Name = "Main"
     main.AnchorPoint = Vector2.new(0.5, 0.5)
     main.Position = UDim2.fromScale(0.5, 0.5)
     main.Size = UDim2.fromOffset(self.Width, self.Height)
-    main.BackgroundColor3 = COLORS.Background
+    main.BackgroundColor3 = COLORS.Sidebar
     main.BorderSizePixel = 0
     main.ClipsDescendants = true
     main.Parent = gui
-    corner(main, 5) -- Sharpened main window from 8 down to 5
-    stroke(main, COLORS.Border, 1)
+    corner(main, 6)
     self.Main = main
 
     local HEADER_HEIGHT = 44 
     local header = Instance.new("Frame")
     header.Name = "Header"
     header.Size = UDim2.new(1, 0, 0, HEADER_HEIGHT)
-    header.BackgroundColor3 = COLORS.Sidebar
+    header.BackgroundTransparency = 1
     header.BorderSizePixel = 0
     header.Parent = main
 
@@ -201,7 +192,7 @@ function Bloxium.new(options)
     navigation.Name = "Navigation"
     navigation.Position = UDim2.fromOffset(0, HEADER_HEIGHT)
     navigation.Size = UDim2.new(0, SIDEBAR_WIDTH, 1, -HEADER_HEIGHT)
-    navigation.BackgroundColor3 = COLORS.Sidebar
+    navigation.BackgroundTransparency = 1
     navigation.BorderSizePixel = 0
     navigation.Parent = main
 
@@ -229,6 +220,7 @@ function Bloxium.new(options)
     navLayout.Parent = navList
     self.NavList = navList
 
+    -- Content container configured to round only its bottom-right corner to match main
     local content = Instance.new("Frame")
     content.Name = "Content"
     content.Position = UDim2.fromOffset(SIDEBAR_WIDTH, HEADER_HEIGHT)
@@ -236,6 +228,29 @@ function Bloxium.new(options)
     content.BackgroundColor3 = COLORS.Background
     content.BorderSizePixel = 0
     content.Parent = main
+    corner(content, 6)
+
+    local patchTL = Instance.new("Frame")
+    patchTL.Size = UDim2.fromOffset(10, 10)
+    patchTL.Position = UDim2.fromOffset(0, 0)
+    patchTL.BackgroundColor3 = COLORS.Background
+    patchTL.BorderSizePixel = 0
+    patchTL.Parent = content
+
+    local patchTR = Instance.new("Frame")
+    patchTR.Size = UDim2.fromOffset(10, 10)
+    patchTR.Position = UDim2.new(1, -10, 0, 0)
+    patchTR.BackgroundColor3 = COLORS.Background
+    patchTR.BorderSizePixel = 0
+    patchTR.Parent = content
+
+    local patchBL = Instance.new("Frame")
+    patchBL.Size = UDim2.fromOffset(10, 10)
+    patchBL.Position = UDim2.new(0, 0, 1, -10)
+    patchBL.BackgroundColor3 = COLORS.Background
+    patchBL.BorderSizePixel = 0
+    patchBL.Parent = content
+
     self.Content = content
 
     if options.ToggleKey then
@@ -255,7 +270,7 @@ function Bloxium:CreateTab(options)
 
     local navButton = makeButton(self.NavList, false)
     navButton.Size = UDim2.new(1, 0, 0, 34)
-    corner(navButton, 4) -- Sharpened tab buttons
+    corner(navButton, 4)
 
     local navText = label(navButton, tab.Name, 14, Enum.Font.GothamMedium, COLORS.Muted)
     navText.Position = UDim2.fromOffset(12, 0)
@@ -269,7 +284,7 @@ function Bloxium:CreateTab(options)
     page.BackgroundTransparency = 1
     page.BorderSizePixel = 0
     page.ScrollBarThickness = 3
-    page.ScrollBarImageColor3 = COLORS.Border
+    page.ScrollBarImageColor3 = COLORS.Divider
     page.CanvasSize = UDim2.fromOffset(0, 0)
     page.AutomaticCanvasSize = Enum.AutomaticSize.Y
     page.Visible = false
@@ -314,10 +329,7 @@ function Bloxium:CreateTab(options)
         container.Size = UDim2.new(1, 0, 0, 0)
         container.AutomaticSize = Enum.AutomaticSize.Y
         container.Parent = page
-        
-        -- Sharpened section backgrounds down to 3 (was 6) to remove the bubbly look
         corner(container, 3) 
-        stroke(container, COLORS.Border, 1)
         padding(container, 12, 12, 10, 10)
 
         local heading = label(container, string.upper(section.Name), 12, Enum.Font.GothamBold, COLORS.Muted)
@@ -355,7 +367,7 @@ function Bloxium:CreateTab(options)
             toggle.BackgroundColor3 = COLORS.Control
             toggle.BorderSizePixel = 0
             toggle.Parent = row
-            corner(toggle, 11) -- Kept perfectly round for pill shape
+            corner(toggle, 11)
 
             local knob = Instance.new("Frame")
             knob.Size = UDim2.fromOffset(18, 18)
@@ -363,7 +375,7 @@ function Bloxium:CreateTab(options)
             knob.BackgroundColor3 = COLORS.Text
             knob.BorderSizePixel = 0
             knob.Parent = toggle
-            corner(knob, 9) -- Kept perfectly round
+            corner(knob, 9)
 
             local hit = makeButton(row, true) 
             hit.Size = UDim2.fromScale(1, 1)
@@ -386,8 +398,7 @@ function Bloxium:CreateTab(options)
             local row = rowBase(36)
             local button = makeButton(row, false)
             button.Size = UDim2.fromScale(1, 1)
-            corner(button, 3) -- Sharpened generic buttons
-            stroke(button, COLORS.Border, 1)
+            corner(button, 3)
 
             local btnText = label(button, opts.Name or "Button", 14, Enum.Font.GothamMedium, COLORS.Text)
             btnText.Size = UDim2.fromScale(1, 1)
@@ -434,7 +445,7 @@ function Bloxium:CreateTab(options)
             knob.Size = UDim2.fromOffset(14, 14)
             knob.BackgroundColor3 = COLORS.Text
             knob.Parent = track
-            corner(knob, 7) -- Kept round
+            corner(knob, 7)
 
             local hit = makeButton(row, true) 
             hit.Position = UDim2.new(0, 0, 0, 20)
@@ -511,8 +522,7 @@ function Bloxium:CreateTab(options)
             local ddButton = makeButton(headerRow, false)
             ddButton.Position = UDim2.new(0.45, 0, 0, 0)
             ddButton.Size = UDim2.new(0.55, 0, 1, 0)
-            corner(ddButton, 3) -- Sharpened dropdown box
-            stroke(ddButton, COLORS.Border, 1)
+            corner(ddButton, 3)
 
             attachButtonEffects(ddButton, COLORS.Control, COLORS.ControlHover, COLORS.ControlPress)
 
@@ -525,8 +535,7 @@ function Bloxium:CreateTab(options)
             optFrame.Size = UDim2.new(1, 0, 0, #optionsList * 32)
             optFrame.BackgroundColor3 = COLORS.Control
             optFrame.Parent = container
-            corner(optFrame, 3) -- Sharpened dropdown list popup
-            stroke(optFrame, COLORS.Border, 1)
+            corner(optFrame, 3)
 
             local optLayout = Instance.new("UIListLayout")
             optLayout.SortOrder = Enum.SortOrder.LayoutOrder
