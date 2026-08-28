@@ -1,25 +1,24 @@
---// Bloxium UI Library (Clean Corners, Borderless)
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 
 local LocalPlayer = Players.LocalPlayer
 
-local Bloxium = {}
-Bloxium.__index = Bloxium
+local Aether = {}
+Aether.__index = Aether
 
 local COLORS = {
-    Background  = Color3.fromRGB(15, 17, 20),
-    Sidebar     = Color3.fromRGB(11, 13, 15),
-    SidebarItem = Color3.fromRGB(22, 25, 29),
-    Panel       = Color3.fromRGB(19, 22, 26),
-    Control     = Color3.fromRGB(25, 28, 33),
-    ControlHover= Color3.fromRGB(42, 47, 56), 
-    ControlPress= Color3.fromRGB(65, 72, 85),
-    Divider     = Color3.fromRGB(30, 33, 38),
-    Text        = Color3.fromRGB(240, 242, 245),
-    Muted       = Color3.fromRGB(140, 145, 155),
-    Accent      = Color3.fromRGB(53, 115, 255),
+    Background   = Color3.fromRGB(15, 17, 20),
+    Sidebar      = Color3.fromRGB(11, 13, 15),
+    SidebarItem  = Color3.fromRGB(22, 25, 29),
+    Panel        = Color3.fromRGB(19, 22, 26),
+    Control      = Color3.fromRGB(25, 28, 33),
+    ControlHover = Color3.fromRGB(42, 47, 56), 
+    ControlPress = Color3.fromRGB(65, 72, 85),
+    Divider      = Color3.fromRGB(30, 33, 38),
+    Text         = Color3.fromRGB(240, 242, 245),
+    Muted        = Color3.fromRGB(140, 145, 155),
+    Accent       = Color3.fromRGB(53, 115, 255),
 }
 
 local function tween(object, duration, properties)
@@ -87,11 +86,11 @@ local function attachButtonEffects(btn, baseColor, hoverColor, pressColor)
     end)
 end
 
-function Bloxium.new(options)
+function Aether.new(options)
     options = options or {}
-    local self = setmetatable({}, Bloxium)
+    local self = setmetatable({}, Aether)
 
-    self.Name = options.Name or "BLOXIUM"
+    self.Name = options.Name or "AETHER"
     self.Version = options.Version or "v1.0"
     self.Width = options.Width or 650 
     self.Height = options.Height or 430
@@ -110,7 +109,24 @@ function Bloxium.new(options)
     gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
     self.Gui = gui
 
-    -- Main window frame inherits the Sidebar color to provide clean outer corners
+    local notifHolder = Instance.new("Frame")
+    notifHolder.Name = "NotificationHolder"
+    notifHolder.AnchorPoint = Vector2.new(1, 1)
+    notifHolder.Position = UDim2.new(1, -20, 1, -20)
+    notifHolder.Size = UDim2.new(0, 260, 1, -40)
+    notifHolder.BackgroundTransparency = 1
+    notifHolder.BorderSizePixel = 0
+    notifHolder.ZIndex = 100
+    notifHolder.Parent = gui
+    self.NotifHolder = notifHolder
+
+    local notifLayout = Instance.new("UIListLayout")
+    notifLayout.Padding = UDim.new(0, 8)
+    notifLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+    notifLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+    notifLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    notifLayout.Parent = notifHolder
+
     local main = Instance.new("Frame")
     main.Name = "Main"
     main.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -129,27 +145,30 @@ function Bloxium.new(options)
     header.Size = UDim2.new(1, 0, 0, HEADER_HEIGHT)
     header.BackgroundTransparency = 1
     header.BorderSizePixel = 0
+    header.ZIndex = 2
     header.Parent = main
 
     local headerDivider = Instance.new("Frame")
-    headerDivider.Position = UDim2.new(0, 0, 1, -1)
+    headerDivider.Name = "HeaderDivider"
+    headerDivider.Position = UDim2.new(0, 0, 0, HEADER_HEIGHT - 1)
     headerDivider.Size = UDim2.new(1, 0, 0, 1)
     headerDivider.BackgroundColor3 = COLORS.Divider
     headerDivider.BorderSizePixel = 0
-    headerDivider.Parent = header
+    headerDivider.ZIndex = 10
+    headerDivider.Parent = main
 
     local title = label(header, self.Name, 17, Enum.Font.GothamBold, COLORS.Text)
     title.Position = UDim2.fromOffset(14, 0)
     title.Size = UDim2.new(0, 200, 1, 0)
 
-    local close = makeButton(header, false)
+    local close = makeButton(header, true)
     close.Size = UDim2.fromOffset(40, HEADER_HEIGHT)
     close.Position = UDim2.new(1, -40, 0, 0)
     local closeGlyph = label(close, "x", 17, Enum.Font.GothamBold, COLORS.Muted)
     closeGlyph.Size = UDim2.fromScale(1, 1)
     closeGlyph.TextXAlignment = Enum.TextXAlignment.Center
 
-    local minimize = makeButton(header, false)
+    local minimize = makeButton(header, true)
     minimize.Size = UDim2.fromOffset(40, HEADER_HEIGHT)
     minimize.Position = UDim2.new(1, -80, 0, 0)
     local minGlyph = label(minimize, "-", 19, Enum.Font.GothamBold, COLORS.Muted)
@@ -220,7 +239,6 @@ function Bloxium.new(options)
     navLayout.Parent = navList
     self.NavList = navList
 
-    -- Content container configured to round only its bottom-right corner to match main
     local content = Instance.new("Frame")
     content.Name = "Content"
     content.Position = UDim2.fromOffset(SIDEBAR_WIDTH, HEADER_HEIGHT)
@@ -264,7 +282,48 @@ function Bloxium.new(options)
     return self
 end
 
-function Bloxium:CreateTab(options)
+function Aether:Notify(options)
+    options = type(options) == "string" and { Title = "Notification", Content = options } or (options or {})
+    local titleText = options.Title or "Notification"
+    local contentText = options.Content or options.Text or ""
+    local duration = options.Duration or 3
+
+    if not self.NotifHolder then return end
+
+    local card = Instance.new("CanvasGroup")
+    card.Name = "NotificationCard"
+    card.Size = UDim2.new(1, 0, 0, 0)
+    card.AutomaticSize = Enum.AutomaticSize.Y
+    card.BackgroundColor3 = COLORS.Panel
+    card.BorderSizePixel = 0
+    card.GroupTransparency = 1
+    card.Parent = self.NotifHolder
+    corner(card, 6)
+    padding(card, 12, 12, 10, 10)
+
+    local notifTitle = label(card, titleText, 14, Enum.Font.GothamBold, COLORS.Text)
+    notifTitle.Size = UDim2.new(1, 0, 0, 18)
+
+    local notifDesc = label(card, contentText, 12, Enum.Font.Gotham, COLORS.Muted)
+    notifDesc.Position = UDim2.fromOffset(0, 20)
+    notifDesc.Size = UDim2.new(1, 0, 0, 0)
+    notifDesc.AutomaticSize = Enum.AutomaticSize.Y
+    notifDesc.TextWrapped = true
+
+    tween(card, 0.25, { GroupTransparency = 0 })
+
+    task.delay(duration, function()
+        if card and card.Parent then
+            local t = TweenService:Create(card, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { GroupTransparency = 1 })
+            t:Play()
+            t.Completed:Connect(function()
+                card:Destroy()
+            end)
+        end
+    end)
+end
+
+function Aether:CreateTab(options)
     options = type(options) == "string" and { Name = options } or (options or {})
     local tab = { Library = self, Name = options.Name or "Tab", Sections = {} }
 
@@ -574,13 +633,13 @@ function Bloxium:CreateTab(options)
     return tab
 end
 
-function Bloxium:Destroy()
+function Aether:Destroy()
     if self.Destroyed then return end
     self.Destroyed = true
     for _, conn in ipairs(self.Connections) do pcall(function() conn:Disconnect() end) end
     if self.Gui then self.Gui:Destroy() end
 end
 
-function Bloxium:CreateWindow(options) return Bloxium.new(options) end
+function Aether:CreateWindow(options) return Aether.new(options) end
 
-return Bloxium
+return Aether
