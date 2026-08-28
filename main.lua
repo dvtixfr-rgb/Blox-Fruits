@@ -178,35 +178,6 @@ function Aether.new(options)
     attachButtonEffects(close, COLORS.Sidebar, Color3.fromRGB(180, 40, 40), Color3.fromRGB(220, 60, 60))
     attachButtonEffects(minimize, COLORS.Sidebar, COLORS.ControlHover, COLORS.ControlPress)
 
-    close.MouseButton1Click:Connect(function() self:Destroy() end)
-    minimize.MouseButton1Click:Connect(function()
-        self.Minimized = not self.Minimized
-        headerDivider.Visible = not self.Minimized
-        tween(main, 0.15, { Size = UDim2.fromOffset(self.Width, self.Minimized and HEADER_HEIGHT or self.Height) })
-    end)
-
-    local dragging, dragStart, startPosition
-    header.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPosition = main.Position
-        end
-    end)
-
-    table.insert(self.Connections, UserInputService.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local delta = input.Position - dragStart
-            main.Position = UDim2.new(startPosition.X.Scale, startPosition.X.Offset + delta.X, startPosition.Y.Scale, startPosition.Y.Offset + delta.Y)
-        end
-    end))
-
-    table.insert(self.Connections, UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
-        end
-    end))
-
     local SIDEBAR_WIDTH = 150
     local navigation = Instance.new("Frame")
     navigation.Name = "Navigation"
@@ -214,6 +185,7 @@ function Aether.new(options)
     navigation.Size = UDim2.new(0, SIDEBAR_WIDTH, 1, -HEADER_HEIGHT)
     navigation.BackgroundTransparency = 1
     navigation.BorderSizePixel = 0
+    navigation.ClipsDescendants = true
     navigation.Parent = main
 
     local navDivider = Instance.new("Frame")
@@ -246,6 +218,7 @@ function Aether.new(options)
     content.Size = UDim2.new(1, -SIDEBAR_WIDTH, 1, -HEADER_HEIGHT)
     content.BackgroundColor3 = COLORS.Background
     content.BorderSizePixel = 0
+    content.ClipsDescendants = true
     content.Parent = main
     corner(content, 6)
 
@@ -271,6 +244,37 @@ function Aether.new(options)
     patchBL.Parent = content
 
     self.Content = content
+
+    close.MouseButton1Click:Connect(function() self:Destroy() end)
+    minimize.MouseButton1Click:Connect(function()
+        self.Minimized = not self.Minimized
+        headerDivider.Visible = not self.Minimized
+        navigation.Visible = not self.Minimized
+        content.Visible = not self.Minimized
+        tween(main, 0.15, { Size = UDim2.fromOffset(self.Width, self.Minimized and HEADER_HEIGHT or self.Height) })
+    end)
+
+    local dragging, dragStart, startPosition
+    header.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPosition = main.Position
+        end
+    end)
+
+    table.insert(self.Connections, UserInputService.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = input.Position - dragStart
+            main.Position = UDim2.new(startPosition.X.Scale, startPosition.X.Offset + delta.X, startPosition.Y.Scale, startPosition.Y.Offset + delta.Y)
+        end
+    end))
+
+    table.insert(self.Connections, UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end))
 
     if options.ToggleKey then
         table.insert(self.Connections, UserInputService.InputBegan:Connect(function(input, processed)
